@@ -3,4 +3,6 @@ __pycache__/
 .env
 .idea/
 .vscode/
-.DS_Store 
+.DS_Store
+Pipfile
+Pipfile.lock 
