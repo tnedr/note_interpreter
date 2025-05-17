@@ -1,8 +1,8 @@
 # 🧠 System Overview: AI-Powered Note Understanding and Enrichment System
 
 **Author:** DrTamasNagy_with_MarkdownRefiner  
-**Date:** 2025-05-16  
-**Version:** 1
+**Date:** 2025-05-17  
+**Version:** 2
 
 ## 🔑 Key Terminology
 
@@ -10,11 +10,11 @@
 - **Interpreted Text**: The fully rewritten version of the raw entity, enriched with full context and clarity.
 - **User Context**: Background information maintained across sessions to help interpret shorthand or ambiguous notes more accurately.
 - **Clarification Q&A**: Dialog exchanges between AI and user to resolve ambiguities before interpretation.
-- **Metadata**: Structured tags (like type, intent, and state) that classify the interpreted text for downstream use.
+- **Metadata**: Structured tags (like type and intent) that classify the interpreted text for downstream use.
 
 ## 1. Goal
 
-To create a system that processes structured notes (from Excel, Markdown, or similar), each note representing a single "raw entity." The system uses a large language model (LLM) to interpret, enrich, and clarify each entity — making it fully understandable, unambiguous, and actionable.
+To create a system that processes structured notes, each note representing a single "raw entity." The system uses a large language model (LLM) to interpret, enrich, and clarify each entity — making it fully understandable, unambiguous, and actionable.
 
 ## 2. 🔁 Processing Pipeline
 
@@ -38,19 +38,16 @@ This pipeline outlines the end-to-end journey of each note, transforming a short
 
 ### 2.2 Raw Input
 
-- Each input note (a “raw entity”) is a standalone sentence or phrase entered by the user.
-- Stored as a cell in a spreadsheet, a bullet in a Markdown file, or similar format.
+- Each input note (a "raw entity") is a standalone sentence or phrase entered by the user.
+- Notes are processed in batches, with user context and classification config as additional inputs.
 
 ### 2.3 Scoring Phase (Pre-Enrichment)
 
-The AI assesses how well it understands the raw input before trying to enrich it. It computes four scores[^1]:
-
-| Score              | Description                                                                 |
-|-------------------|-----------------------------------------------------------------------------|
-| Understandability  | Measures how grammatically and syntactically clear the sentence is.         |
-| Interpretability   | Measures how well the AI can map the sentence to a meaning using user context. |
-| Ambiguity          | Measures how many valid interpretations the input might have.               |
-| Confidence         | Measures how confident the AI is in its chosen interpretation.              |
+The AI assesses how well it understands the raw input before trying to enrich it. It computes four scores:
+- **Understandability**: How grammatically and syntactically clear the sentence is.
+- **Interpretability**: How well the AI can map the sentence to a meaning using user context.
+- **Ambiguity**: How many valid interpretations the input might have.
+- **Confidence**: How confident the AI is in its chosen interpretation.
 
 ### 2.4 Clarification Phase (If Needed)
 
@@ -63,7 +60,6 @@ The AI assesses how well it understands the raw input before trying to enrich it
 The AI rewrites the entity as a fully clarified, complete, and self-contained sentence.
 
 The output should:
-
 - Be grammatically correct
 - Contain no ambiguity
 - Include all necessary context
@@ -71,45 +67,25 @@ The output should:
 
 ### 2.6 Metadata Enrichment
 
-After interpretation, the AI assigns structured metadata to the interpreted entity[^2].
+After interpretation, the AI assigns structured metadata to the interpreted entity, such as:
+- **entity_type**: Task, idea, project, question, etc.
+- **intent**: Human intent behind the note (e.g., continue, review, plan)
 
-| Field        | Description                                                  |
-|--------------|--------------------------------------------------------------|
-| entity_type  | Task, idea, project, question, etc.                          |
-| intent       | Human intent behind the note (e.g., continue, review, plan) |
-| state        | Status of the item (to-do, active, archived, etc.)          |
+### 2.7 Structured Output Data
 
-### 2.7 Structured Output Format
+Each processed note is enriched with the following fields:
+- Raw input
+- Scores (understandability, interpretability, ambiguity, confidence)
+- Clarification Q&A (if needed)
+- Interpreted text
+- Clarity score
+- Metadata (entity_type, intent, etc.)
 
-**Example: Fully Enriched Entity**
-
-```json
-{
-  "raw_input": "continue plan",  
-  "understandability_score": 80,
-  "interpretability_score": 60,
-  "ambiguity_score": 75,
-  "confidence_score": 50,
-  "clarification_q_and_a": [
-    {
-      "question": "Which plan are you referring to?",
-      "user_answer": "The marketing launch plan for Q3"
-    }
-  ],
-  "interpreted_text": "Continue working on the Q3 marketing launch plan, starting with revising the email campaign sequence.",
-  "clarity_score": 95,
-  "metadata": {
-    "entity_type": "task",
-    "intent": "continue",
-    "state": "in-progress"
-  }
-}
-```
+> **Note:** The specific output file format (CSV, JSON, etc.) and column structure are defined in the functional and technical specifications.
 
 ## 3. 🧠 User Context & Memory (Evolving)
 
 The system maintains a user context to help the AI interpret raw notes more accurately. This includes:
-
 - Known project names or acronyms
 - Personal vocabulary or shorthand
 - Preferred phrasing or style
@@ -118,13 +94,10 @@ The system maintains a user context to help the AI interpret raw notes more accu
 - Clarifications given in previous sessions
 
 The context is:
-
 - Editable directly by the user
 - Updated after each batch of notes is processed
 - Used during interpretation before prompting questions
 - Persistent across sessions to enable continuous improvement
-
-Session-level memory is less important; focus is on persistent user-level context.
 
 ## 4. ✅ Design Principles & Core Guidelines
 
@@ -146,10 +119,9 @@ This system transforms raw, often ambiguous notes into clear, contextualized, an
 - *Understandability*: Measures clarity of phrasing and grammar.
 - *Interpretability*: Measures how easily the AI can map the note to intent or context.
 - *Ambiguity*: Detects whether the note could have multiple meanings.
-- *Confidence*: Reflects AI’s certainty about its interpretation.
+- *Confidence*: Reflects AI's certainty about its interpretation.
 
 [^2]: **Metadata Fields**:
 - *entity_type*: Categorizes the nature of the note (task, idea, etc.)
-- *intent*: Indicates the user’s goal (e.g., review, initiate).
-- *state*: Describes current status (to-do, in-progress, done, etc.)
+- *intent*: Indicates the user's goal (e.g., review, initiate).
 - *clarity_score*: Measures how clear and actionable the final interpreted text is, post-enrichment.

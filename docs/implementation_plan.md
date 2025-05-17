@@ -9,6 +9,37 @@
   - Output a CSV with the same notes, but with placeholder fields for scores, interpretation, and metadata.
 - **Why:** Ensures your data flow and file handling are robust before adding LLM complexity.
 
+## MVP 1 Implementation Plan
+
+### Goal
+Prove the data pipeline, file I/O, and data models work (no LLM, no clarification logic).
+
+### Task Checklist
+- [ ] Define `Note` and `NoteBatch` classes using `pydantic` for validation.
+- [ ] Add serialization/deserialization methods for `Note` (from/to CSV row).
+- [ ] Implement `InputHandler` to read notes from CSV, user memory from Markdown, and classification config from YAML.
+- [ ] Implement `OutputGenerator` to write a batch of notes to CSV with placeholder fields for scores, interpretation, and metadata.
+- [ ] Write unit tests for data models and file I/O.
+- [ ] Write an integration test for the full pipeline (read input → process → write output).
+- [ ] Add example input files to `docs/examples/`.
+- [ ] Document how to run the MVP 1 pipeline and tests in the `README.md`.
+
+### AI Suggestions
+- Use test-driven development: write or update tests before implementing each feature.
+- Keep each function/class small and focused for easier testing and debugging.
+- Automate test runs with a script or CI (e.g., GitHub Actions).
+- Log each major step or decision in `aihuman_journal/journal.md`.
+
+### Progress Tracking
+| Task | Status |
+|------|--------|
+| Define data models | [ ] |
+| Implement file I/O | [ ] |
+| Write unit tests | [ ] |
+| Write integration test | [ ] |
+| Add example files | [ ] |
+| Update documentation | [ ] |
+
 ### MVP 2: LLM Batch Processing (No Clarification Loop)
 - **Goal:** Integrate the LLM agent for batch processing of notes.
 - **Features:**
