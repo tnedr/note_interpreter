@@ -3,6 +3,21 @@ from note_interpreter.models import LLMOutput, DataEntry
 import os
 from dotenv import load_dotenv
 load_dotenv()
+from pydantic import BaseModel, Field
+import json
+import re
+
+class StrictDataEntry(BaseModel):
+    field1: str = Field(..., description="Description for field1")
+    field2: int = Field(..., description="Description for field2")
+    class Config:
+        extra = "forbid"
+
+class StrictLLMOutput(BaseModel):
+    entries: List[StrictDataEntry] = Field(..., description="List of structured data entries.")
+    new_memory_points: List[str] = Field(..., description="New bullet points to append to the Markdown memory.")
+    class Config:
+        extra = "forbid"
 
 class LLMAgent:
     """
@@ -46,22 +61,23 @@ Please interact with the user to collect the necessary information to complete t
         try:
             print("[LLMAgent] Using real LLM via LangChain and OpenAI function-calling API.")
             from langchain_openai import ChatOpenAI
-            from pydantic import BaseModel
             from langchain.tools import tool
             from langchain.agents import create_openai_functions_agent, AgentExecutor
             from langchain.prompts import ChatPromptTemplate
 
-            # Define a tool for structured output
+            # Strict tool for structured output
             @tool
             def collect_data_tool(entries: List[dict], new_memory_points: List[str]) -> str:
-                """Collects structured data and new memory points."""
-                entry_objs = [DataEntry(**e) for e in entries]
-                return LLMOutput(entries=entry_objs, new_memory_points=new_memory_points).model_dump_json()
+                """You must ALWAYS use this tool to return your answer in structured form as JSON. Never reply in plain text. If you cannot answer, call the tool with empty fields."""
+                # If the LLM cannot answer, return empty fields
+                if not entries and not new_memory_points:
+                    return StrictLLMOutput(entries=[], new_memory_points=[]).model_dump_json()
+                entry_objs = [StrictDataEntry(**e) for e in entries]
+                return StrictLLMOutput(entries=entry_objs, new_memory_points=new_memory_points).model_dump_json()
 
             llm = ChatOpenAI(model="gpt-4.1-mini", openai_api_key=api_key)
-            # Define the prompt template for the agent
             prompt_template = ChatPromptTemplate.from_messages([
-                ("system", "You are an AI agent assisting with data entry. Use the provided tool to return structured data."),
+                ("system", "You are an AI agent assisting with data entry. You must ALWAYS use the provided tool to return your answer in structured form as JSON. Never reply in plain text. If you cannot answer, you must call the tool with empty fields."),
                 ("user", "{input}"),
                 ("system", "{agent_scratchpad}")
             ])
@@ -69,12 +85,19 @@ Please interact with the user to collect the necessary information to complete t
             executor = AgentExecutor(agent=agent, tools=[collect_data_tool], verbose=True)
             prompt = self.build_prompt()
             result = executor.invoke({"input": prompt})
-            import json
             if isinstance(result, dict) and "output" in result:
-                output_data = json.loads(result["output"])
-                entries = [DataEntry(**e) for e in output_data["entries"]]
-                new_memory_points = output_data["new_memory_points"]
-                return LLMOutput(entries=entries, new_memory_points=new_memory_points)
+                print("Raw LLM output:", result["output"])
+                raw_output = result["output"]
+                # Extract the first JSON object from the output
+                match = re.search(r'\{.*\}', raw_output, re.DOTALL)
+                if match:
+                    json_str = match.group(0)
+                    output_data = json.loads(json_str)
+                    entries = [DataEntry(**e) for e in output_data.get("entries", [])]
+                    new_memory_points = output_data.get("new_memory_points", [])
+                    return LLMOutput(entries=entries, new_memory_points=new_memory_points)
+                else:
+                    raise ValueError("No valid JSON object found in LLM output.")
             else:
                 raise ValueError("Unexpected agent output format.")
         except Exception as e:
