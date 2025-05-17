@@ -1,0 +1,1 @@
+# ⚙️ Functional Specification – AI-Powered Note Understanding and Enrichment System 

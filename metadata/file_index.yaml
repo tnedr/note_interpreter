@@ -1,0 +1,33 @@
+files:
+  - path: main.py
+    description: Entry point for the application
+  - path: note_interpreter/
+    description: Main Python package for core logic
+  - path: note_interpreter/__init__.py
+    description: Package initializer
+  - path: tests/
+    description: Unit tests directory
+  - path: tests/__init__.py
+    description: Test package initializer
+  - path: tests/test_basic.py
+    description: Basic test to verify test setup
+  - path: docs/
+    description: Project documentation folder
+  - path: docs/index.md
+    description: Documentation index
+  - path: docs/overview_note_interpreter.md
+    description: System overview and key concepts
+  - path: docs/functional_specification_note_interpreter.md
+    description: Functional specification of the system
+  - path: metadata/
+    description: Project metadata folder
+  - path: metadata/LICENSE
+    description: Project license (MIT)
+  - path: metadata/CHANGELOG.md
+    description: Project changelog
+  - path: requirements.txt
+    description: Python dependencies
+  - path: .gitignore
+    description: Git ignore rules
+  - path: README.md
+    description: Project overview and getting started 
