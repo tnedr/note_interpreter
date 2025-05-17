@@ -1,0 +1,2 @@
+- I have used cursor.ai and auto for writin tech spec based on functional spec and system overview. it was extramely fast and efficient.
+- cursor ai killed my files while I asked it to rename the files (i used auto model selection)
