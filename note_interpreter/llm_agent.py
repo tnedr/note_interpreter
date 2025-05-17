@@ -41,8 +41,8 @@ Please interact with the user to collect the necessary information to complete t
 
 if __name__ == "__main__":
     from note_interpreter.io import load_notes_from_csv, load_user_memory_from_md
-    notes = load_notes_from_csv("../docs/examples/example_notes.csv")
-    user_memory = load_user_memory_from_md("../docs/examples/example_user_memory.md")
+    notes = load_notes_from_csv("docs/examples/example_notes.csv")
+    user_memory = load_user_memory_from_md("docs/examples/example_user_memory.md")
     agent = LLMAgent(notes, user_memory)
     output = agent.run()
-    print(output.json(indent=2)) 
+    print(output.model_dump_json(indent=2)) 
