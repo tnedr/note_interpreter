@@ -1,0 +1,31 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Whenever a significant event, decision, or observation occurs during the project (including code changes, design discussions, or process updates), the AI assistant must append a brief summary of the event to the top of aihuman_journal/journal.md, using the following format:
+All entries for a given day are grouped together, with the marker - now [YYYY-MM-DD] at the bottom of the day's block.
+New entries are always added above the most recent date marker, so the most recent events are at the top of the file.
+When a new day starts, a new - now [YYYY-MM-DD] marker is added at the bottom of the new day's block.
+
+Example:
+# AI-Human Project Journal
+
+- Fixed a bug in the InputHandler.
+- Decided to start implementing MVP 1.
+- now 2025-05-18
+
+- Added detailed MVP milestones to the implementation plan for incremental delivery and validation.
+- now 2025-05-17
+
+
+Guidelines:
+Each entry should be a single, clear sentence describing what happened or was decided.
+The journal should be updated after every major step, milestone, or important discussion.
+The format must be strictly followed to ensure chronological clarity and easy review.
+
+
+
+
+
+
