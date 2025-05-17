@@ -1,0 +1,34 @@
+entity_types:
+  - task
+  - project
+  - idea
+  - note
+  - routine
+  - reference
+  - log
+  - conversation
+  - wish
+  - trigger
+  - feedback
+  - signal
+  - bookmark
+  - role
+  - template
+  - suggestion
+  - decision
+  - question
+  - insight
+  - hypothesis
+  - workflow
+intents:
+  - @DO
+  - @THINK
+  - @PLAN
+  - @BUILD
+  - @LEARN
+  - @REVIEW
+  - @MEET
+  - @BUY
+  - @WAITING
+  - @REFLECT
+  - @DECIDE 
