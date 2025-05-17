@@ -48,6 +48,50 @@ Prove the data pipeline, file I/O, and data models work (no LLM, no clarificatio
   - No clarification questions yet—just one-shot processing.
 - **Why:** Validates LLM integration, prompt design, and output parsing.
 
+### MVP 2 Implementation Plan: LLM Batch Processing (No Clarification Loop)
+
+#### Goal
+Integrate the LLM agent for batch processing of notes, producing enriched output (scores, interpretation, metadata) for each note in a single pass, without clarification questions.
+
+#### Approach & Constraints
+- The agent will be implemented using **LangChain** for modularity, memory/context management, and easy LLM integration.
+- **Function-calling/tool usage** will be used to ensure structured output (scores, interpretation, metadata) from the LLM, reducing parsing errors and ambiguity.
+- Only a restricted set of LLMs (e.g., OpenAI GPT-4, some Azure/OpenAI endpoints) currently support function-calling; this constrains model selection, but the LLM should be replaceable/configurable.
+- LangChain's memory features may be used to inject user memory/context into each batch.
+
+#### Task Checklist
+- [ ] Design and document the LLM prompt template for batch note processing (input: notes, user memory, classification config).
+- [ ] Define the function/tool schema for structured output (input/output signature for enrichment tool).
+- [ ] Implement the `LLMAgent` class as a LangChain agent with function/tool usage for structured output.
+- [ ] Integrate LLM API (OpenAI, Azure, or other function-calling-capable model) for batch processing.
+- [ ] Implement output parsing and validation (scores, interpretation, metadata) from LLM responses.
+- [ ] Update the pipeline to use the LangChain-based LLM agent for batch processing.
+- [ ] Write unit tests for the LLM agent and output parsing logic.
+- [ ] Write an integration test for the full pipeline (input → LLM agent → output).
+- [ ] Add example LLM prompt/response schemas and function/tool definitions to the docs.
+- [ ] Update the `README.md` with instructions for running the MVP 2 pipeline.
+
+#### AI Suggestions
+- Start with a simple, robust prompt template; iterate based on test results.
+- Use mock LLM responses for initial testing to decouple prompt design from API integration.
+- Validate all LLM outputs against the classification config and required fields.
+- Log all LLM requests and responses for debugging and traceability.
+- Continue to log all major steps and decisions in `aihuman_journal/journal.md`.
+
+#### Progress Tracking
+| Task | Status |
+|------|--------|
+| Design prompt template | [ ] |
+| Define function/tool schema | [ ] |
+| Implement LangChain LLMAgent | [ ] |
+| Integrate LLM API | [ ] |
+| Output parsing/validation | [ ] |
+| Update pipeline | [ ] |
+| Unit tests | [ ] |
+| Integration test | [ ] |
+| Example prompt/response | [ ] |
+| Update README | [ ] |
+
 ### MVP 3: Clarification Loop
 - **Goal:** Add the clarification loop for ambiguous notes.
 - **Features:**
