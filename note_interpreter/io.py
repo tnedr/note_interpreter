@@ -52,4 +52,24 @@ class OutputGenerator:
                     'entity_type': note.metadata.get('entity_type', ''),
                     'intent': note.metadata.get('intent', '')
                 }
-                writer.writerow(row) 
+                writer.writerow(row)
+
+def load_notes_from_csv(path: str) -> list:
+    """Load notes from a CSV file (one note per line)."""
+    notes = []
+    with open(path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            if row:
+                notes.append(row[0])
+    return notes
+
+def load_user_memory_from_md(path: str) -> list:
+    """Load user memory from a Markdown file (one bullet point per line)."""
+    memory = []
+    with open(path, encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith('* '):
+                memory.append(line[2:])
+    return memory 

@@ -60,6 +60,11 @@ Integrate the LLM agent for batch processing of notes, producing enriched output
 - LangChain's memory features may be used to inject user memory/context into each batch.
 
 #### Task Checklist
+- [ ] Implement and test a minimal LLM agent prototype ("pilot") that:
+    - Accepts a Markdown memory and partial CSV as context
+    - Uses a Pydantic schema for structured output (as in agent_building_guidelines.md)
+    - Returns structured data and new memory points
+    - Includes a test script and documentation of results
 - [ ] Design and document the LLM prompt template for batch note processing (input: notes, user memory, classification config).
 - [ ] Define the function/tool schema for structured output (input/output signature for enrichment tool).
 - [ ] Implement the `LLMAgent` class as a LangChain agent with function/tool usage for structured output.

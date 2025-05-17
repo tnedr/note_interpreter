@@ -18,4 +18,20 @@ class NoteBatch(BaseModel):
     """
     notes: List[Note] = Field(..., description="List of Note objects in the batch.")
     user_memory: List[str] = Field(default_factory=list, description="Narrative user memory entries.")
-    classification_config: Dict[str, Any] = Field(default_factory=dict, description="Classification config loaded from YAML.") 
+    classification_config: Dict[str, Any] = Field(default_factory=dict, description="Classification config loaded from YAML.")
+
+class DataEntry(BaseModel):
+    """
+    Represents a single structured data entry returned by the LLM agent.
+    Extend fields as needed to match the output requirements.
+    """
+    field1: str = Field(..., description="Description for field1")
+    field2: int = Field(..., description="Description for field2")
+    # Add more fields as needed
+
+class LLMOutput(BaseModel):
+    """
+    Represents the structured output from the LLM agent, including new memory points.
+    """
+    entries: List[DataEntry]
+    new_memory_points: List[str] = Field(default_factory=list, description="New bullet points to append to the Markdown memory.") 
