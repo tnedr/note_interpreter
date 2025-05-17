@@ -21,14 +21,14 @@ entity_types:
   - hypothesis
   - workflow
 intents:
-  - @DO
-  - @THINK
-  - @PLAN
-  - @BUILD
-  - @LEARN
-  - @REVIEW
-  - @MEET
-  - @BUY
-  - @WAITING
-  - @REFLECT
-  - @DECIDE 
+  - "@DO"
+  - "@THINK"
+  - "@PLAN"
+  - "@BUILD"
+  - "@LEARN"
+  - "@REVIEW"
+  - "@MEET"
+  - "@BUY"
+  - "@WAITING"
+  - "@REFLECT"
+  - "@DECIDE" 
