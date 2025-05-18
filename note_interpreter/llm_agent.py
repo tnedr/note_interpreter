@@ -9,6 +9,7 @@ from note_interpreter.agent_core import AgentCore, ToolDefinition, OpenAIToolPro
 from langchain_openai import ChatOpenAI
 import yaml
 import logging
+import datetime
 
 class MemoryManager:
     """Handles loading and saving long-term memory."""
@@ -29,10 +30,6 @@ def load_schema_from_yaml(path: str) -> dict:
         return yaml.safe_load(f)
 
 def load_parameters_from_yaml(path: str) -> dict:
-    with open(path, 'r', encoding='utf-8') as f:
-        return yaml.safe_load(f)
-
-def load_scoring_metrics_from_yaml(path: str) -> dict:
     with open(path, 'r', encoding='utf-8') as f:
         return yaml.safe_load(f)
 
@@ -59,6 +56,7 @@ class SystemPromptBuilder:
         with open(config_path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
         sections = config.get('sections', [])
+        print("[DEBUG] Section order from config:", [section.get('name') for section in sections])
         # Check if classification section has a file param
         classification_file = None
         for section in sections:
@@ -70,14 +68,17 @@ class SystemPromptBuilder:
                 loaded_classification_config = yaml.safe_load(f)
         else:
             loaded_classification_config = classification_config or {}
+        # scoring_metrics is now always sourced from schema
+        schema_obj = schema or {}
+        scoring_metrics_obj = schema_obj.get('scoring_metrics', {})
         context = {
             'memory': memory,
             'notes': notes,
             'classification_config': loaded_classification_config,
             'extra_context': extra_context or {},
-            'schema': schema or {},
+            'schema': schema_obj,
             'parameters': parameters or {},
-            'scoring_metrics': scoring_metrics or {},
+            'scoring_metrics': scoring_metrics_obj,
         }
         prompt_parts = []
         for section in sections:
@@ -99,7 +100,9 @@ class SystemPromptBuilder:
                     logging.warning(f"Prompt section '{name}' failed: {e}")
             else:
                 logging.warning(f"Prompt section '{name}' not found in registry.")
-        return "\n".join([p for p in prompt_parts if p])
+        prompt = "\n".join([p for p in prompt_parts if p])
+        logging.debug("[DEBUG] Final built system prompt:\n" + prompt)
+        return prompt
 
     @classmethod
     def build(cls, memory: List[str], notes: List[str], classification_config: dict = None, extra_context: Optional[dict] = None, schema: dict = None, parameters: dict = None, scoring_metrics: dict = None, config_path: str = None) -> str:
@@ -393,7 +396,6 @@ class LLMAgent:
     _logging_initialized = False
     _schema = None
     _parameters = None
-    _scoring_metrics = None
     """
     Modular LLM agent using AgentCore for conversation and tool orchestration.
     Handles memory, prompt building, clarification loop, and structured output.
@@ -406,32 +408,40 @@ class LLMAgent:
         self.notes = notes
         self.user_memory = user_memory
         self.classification_config = classification_config or {}
-        # Load schema, parameters, and scoring metrics if not already loaded
+        # Load schema and parameters if not already loaded
         if not LLMAgent._schema:
             LLMAgent._schema = load_schema_from_yaml("resources/notes_output_schema.yaml")
         if not LLMAgent._parameters:
             LLMAgent._parameters = load_parameters_from_yaml("resources/agent_parameters.yaml")
-        if not LLMAgent._scoring_metrics:
-            LLMAgent._scoring_metrics = load_scoring_metrics_from_yaml("resources/scoring_metrics.yaml")
         self.schema = LLMAgent._schema
         self.parameters = LLMAgent._parameters
-        self.scoring_metrics = LLMAgent._scoring_metrics
+        # scoring_metrics is now always sourced from schema
+        self.scoring_metrics = self.schema.get('scoring_metrics', {})
         # Use parameters for agent config
         self.max_clarification_rounds = max_clarification_rounds if max_clarification_rounds is not None else self.parameters['max_clarification_rounds']['value']
         self.debug_mode = debug_mode
         self.shared_context = shared_context or {}
         self.temperature = temperature if temperature is not None else self.parameters['temperature']['value']
         if self.debug_mode and not LLMAgent._logging_initialized:
+            log_dir = "logs"
+            os.makedirs(log_dir, exist_ok=True)
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            log_filename = os.path.join(log_dir, "llm_agent_debug.log")
+            # At the start, delete the old log if it exists
+            if os.path.exists(log_filename):
+                os.remove(log_filename)
             logger = logging.getLogger()
             logger.setLevel(logging.DEBUG)
             # Remove all handlers (to avoid duplicate logs)
             for handler in logger.handlers[:]:
                 logger.removeHandler(handler)
-            # Add file handler
-            file_handler = logging.FileHandler("llm_agent_debug.log", mode='w', encoding='utf-8')
+            # Add file handler (always logs/llm_agent_debug.log)
+            file_handler = logging.FileHandler(log_filename, mode='w', encoding='utf-8')
             file_handler.setLevel(logging.DEBUG)
             file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
             logger.addHandler(file_handler)
+            print(f"[DEBUG] Logging setup complete. Log file: {log_filename}")
+            logging.debug("[DEBUG] Logger initialized and file handler added.")
             # Add console handler
             console_handler = logging.StreamHandler()
             console_handler.setLevel(logging.DEBUG)
@@ -512,66 +522,101 @@ class LLMAgent:
 
     def run(self) -> LLMOutput:
         clarification_qas = []
-        for round_num in range(self.max_clarification_rounds):
-            user_context = SystemPromptBuilder.build(
-                self.user_memory,
-                self.notes,
-                classification_config=self.classification_config,
-                extra_context={"clarification_qas": clarification_qas},
-                schema=self.schema,
-                parameters=self.parameters,
-                scoring_metrics=self.scoring_metrics
-            )
-            if self.debug_mode:
-                logging.debug(f"System prompt (round {round_num+1}):\n{user_context}\n")
-            response = self.agent_core.handle_user_message(user_context)
-            if self.debug_mode:
-                logging.debug(f"Raw AgentCore response: {response}")
-            # Check which tool was called
-            if response["type"] == "tool_call" and response["tool_details"]:
-                tool_name = response["tool_details"]["name"]
-                tool_output = response["display_message"]
-                try:
-                    if (not tool_output or tool_output == "") and response["tool_details"] and "args" in response["tool_details"]:
-                        output_data = response["tool_details"]["args"]
-                    else:
-                        output_data = json.loads(tool_output) if isinstance(tool_output, str) else tool_output
-                    if self.debug_mode:
-                        logging.debug(f"Tool '{tool_name}' output: {output_data}")
-                    if tool_name == "clarification_tool":
-                        questions = output_data.get("questions", [])
-                        if questions:
-                            print("\nClarification questions:")
-                            for i, q in enumerate(questions, 1):
-                                print(f"{i}: {q}")
-                        answers = []
-                        for i, q in enumerate(questions, 1):
-                            a = input(f"Your answer to '{q}': ")
-                            answers.append((q, a))
-                        clarification_qas.extend(answers)
-                        continue  # Next round with updated Q&A
-                    elif tool_name == "finalize_notes_tool":
-                        final_output = OutputFormatter.format(output_data)
+        archive_done = False
+        tool_call_log = []  # Collect tool call logs for summary if needed
+        try:
+            for round_num in range(self.max_clarification_rounds):
+                user_context = SystemPromptBuilder.build(
+                    self.user_memory,
+                    self.notes,
+                    classification_config=self.classification_config,
+                    extra_context={"clarification_qas": clarification_qas},
+                    schema=self.schema,
+                    parameters=self.parameters,
+                    scoring_metrics=self.scoring_metrics
+                )
+                if self.debug_mode:
+                    logging.debug(f"System prompt (round {round_num+1}):\n{user_context}\n")
+                response = self.agent_core.handle_user_message(user_context)
+                if self.debug_mode:
+                    logging.debug(f"Raw AgentCore response: {response}")
+                # Check which tool was called
+                if response["type"] == "tool_call" and response["tool_details"]:
+                    tool_name = response["tool_details"]["name"]
+                    tool_output = response["display_message"]
+                    try:
+                        if (not tool_output or tool_output == "") and response["tool_details"] and "args" in response["tool_details"]:
+                            output_data = response["tool_details"]["args"]
+                        else:
+                            output_data = json.loads(tool_output) if isinstance(tool_output, str) else tool_output
                         if self.debug_mode:
-                            logging.debug(f"Final output: {final_output}")
-                        return final_output
-                except Exception as e:
-                    logging.error(f"[LLMAgent] Failed to parse tool output: {e}. Raw output: {tool_output}")
+                            # Pretty-print tool call
+                            logging.debug(f"\n==== TOOL CALL ====\nTool: {tool_name}\nArguments:\n{json.dumps(output_data, indent=2, ensure_ascii=False)}\n")
+                        tool_call_log.append({"tool": tool_name, "args": output_data})
+                        if tool_name == "clarification_tool":
+                            questions = output_data.get("questions", [])
+                            if questions:
+                                print("\nClarification questions:")
+                                for i, q in enumerate(questions, 1):
+                                    print(f"{i}: {q}")
+                            answers = []
+                            for i, q in enumerate(questions, 1):
+                                a = input(f"Your answer to '{q}': ")
+                                answers.append((q, a))
+                            clarification_qas.extend(answers)
+                            continue  # Next round with updated Q&A
+                        elif tool_name == "finalize_notes_tool":
+                            final_output = OutputFormatter.format(output_data)
+                            if self.debug_mode:
+                                # Pretty-print final output
+                                if hasattr(final_output, "model_dump_json"):
+                                    output_str = final_output.model_dump_json(indent=2)
+                                else:
+                                    try:
+                                        output_str = json.dumps(final_output, indent=2, ensure_ascii=False)
+                                    except Exception:
+                                        output_str = str(final_output)
+                                logging.debug(f"\n==== FINAL OUTPUT ====\n{output_str}\n")
+                            return final_output
+                    except Exception as e:
+                        logging.error(f"[LLMAgent] Failed to parse tool output: {e}. Raw output: {tool_output}")
+                        continue
+                else:
+                    # If not a tool call, treat as clarification request or message
+                    print("LLM says:", response["display_message"])
+                    user_input = input("Your answer: ")
+                    clarification_qas.append((response["display_message"], user_input))
                     continue
-            else:
-                # If not a tool call, treat as clarification request or message
-                print("LLM says:", response["display_message"])
-                user_input = input("Your answer: ")
-                clarification_qas.append((response["display_message"], user_input))
-                continue
-        # If max rounds reached, finalize with placeholders
-        logging.warning("Maximum clarification rounds reached. Finalizing with placeholders if needed.")
-        entries = [DataEntry(interpreted_text="UNDEFINED", entity_type="UNDEFINED", intent="UNDEFINED", clarity_score=0)]
-        new_memory_points = ["Clarification incomplete. Some fields may be undefined."]
-        final_output = LLMOutput(entries=entries, new_memory_points=new_memory_points)
-        if self.debug_mode:
-            logging.debug(f"Final output (fallback): {final_output}")
-        return final_output
+            # If max rounds reached, finalize with placeholders
+            logging.warning("Maximum clarification rounds reached. Finalizing with placeholders if needed.")
+            entries = [DataEntry(interpreted_text="UNDEFINED", entity_type="UNDEFINED", intent="UNDEFINED", clarity_score=0)]
+            new_memory_points = ["Clarification incomplete. Some fields may be undefined."]
+            final_output = LLMOutput(entries=entries, new_memory_points=new_memory_points)
+            if self.debug_mode:
+                if hasattr(final_output, "model_dump_json"):
+                    output_str = final_output.model_dump_json(indent=2)
+                else:
+                    try:
+                        output_str = json.dumps(final_output, indent=2, ensure_ascii=False)
+                    except Exception:
+                        output_str = str(final_output)
+                logging.debug(f"\n==== FINAL OUTPUT (FALLBACK) ====\n{output_str}\n")
+            return final_output
+        finally:
+            # Always archive the log at the end of run
+            if self.debug_mode:
+                log_dir = "logs"
+                log_filename = os.path.join(log_dir, "llm_agent_debug.log")
+                import shutil
+                import datetime
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
+                archive_filename = os.path.join(log_dir, f"llm_agent_debug_{timestamp}.log")
+                try:
+                    if os.path.exists(log_filename):
+                        shutil.copyfile(log_filename, archive_filename)
+                        print(f"[DEBUG] Archived log to {archive_filename}")
+                except Exception as e:
+                    print(f"[DEBUG] Could not archive log: {e}")
 
     def _is_fallback_output(self, output: LLMOutput) -> bool:
         """Returns True if the output is a fallback/placeholder (e.g., UNDEFINED fields)."""

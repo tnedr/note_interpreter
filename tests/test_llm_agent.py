@@ -93,7 +93,7 @@ def test_realistic_notes_prompt():
         "Tamas is interested in psychology and spirituality."
     ]
     classification_config = load_classification_from_yaml("resources/entity_types_and_intents.yaml")
-    prompt = SystemPromptBuilder.build(memory, notes, classification_config=classification_config)
+    prompt = SystemPromptBuilder.build(memory, notes, classification_config=classification_config, config_path=None)
     print("\n--- SYSTEM PROMPT WITH REALISTIC NOTES ---\n")
     print(prompt)
     print("\n--- END SYSTEM PROMPT ---\n")
@@ -102,6 +102,9 @@ def test_realistic_notes_prompt():
         assert note in prompt
     for mem in memory:
         assert mem in prompt
+    # Also test LLMAgent logging and archiving
+    agent = LLMAgent(notes, memory, classification_config=classification_config, debug_mode=True)
+    agent.run()
 
 # --- NEW TESTS ---
 
