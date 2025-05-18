@@ -19,4 +19,19 @@
 - Updated the Classification YAML in the functional specification to include all entity_types and intents from the glossary for comprehensive metadata alignment.
 - Set temperature=0.0 for all real LLM tests and the agent to ensure deterministic output, and updated both the agent and test code to support this.
 - Changed DataEntry schema to match the system prompt and tool output (interpreted_text, entity_type, intent, clarity_score), updated all code and tests accordingly for consistency and correctness.
+- Fixed an indentation bug in the clarification loop in llm_agent.py.
+- Added a helper method to LLMAgent to detect fallback/placeholder output.
+- Updated real LLM tests to assert that fallback output is not returned, with clear error messages.
+- Ensured temperature=0.0 is always set for deterministic output in real LLM tests.
+- Improved debug logging for tool outputs and fallback cases in the agent.
+- now 2024-06-09
+- Implemented a config-driven, registry-based prompt builder (SystemPromptBuilder) that builds prompts from a YAML config file.
+- Each prompt section is now a registry function, and the prompt structure/content is fully controlled by config.
+- Added resources/prompt_config.yaml as the default config, supporting section order, enable/disable, and custom text/overrides.
+- Refactored all prompt section logic to use the new registry system, enabling ultimate flexibility and extensibility.
+- Added a params field to the classification section in prompt_config.yaml, allowing the classification YAML file to be specified in config.
+- Updated SystemPromptBuilder to load the classification config from the file specified in the config, making the prompt builder fully config-driven for classification as well.
+- Merged output_schema and output_field_meanings into a single output_schema_and_meanings section, loaded from YAML.
+- Updated resources/schema.yaml to contain both type and description for each field.
+- Updated SystemPromptBuilder and prompt_config.yaml to use the new unified section, making schema and field docs fully data-driven.
 

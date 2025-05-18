@@ -1,0 +1,105 @@
+# PROMPT CONFIG STRUCTURE (for human readers only)
+#
+# This config controls the order, inclusion, and customization of prompt sections for the AI note interpreter agent.
+#
+# Prompt Sections (in order):
+#   - intro: System introduction and agent persona
+#   - goals: What the agent must achieve
+#   - output_schema_and_meanings: Unified output schema and field meanings (from YAML)
+#   - classification: Allowed entity types and intents (from YAML)
+#   - scoring_guidelines: Note scoring/clarification triggers
+#   - parameter_explanations: Agent parameters and thresholds
+#   - output_validation_rules: Output requirements and constraints
+#   - tool_json_schema: JSON schema for the main tool
+#   - tool_behavior_summary: How/when to use tools
+#   - context_usage: How to use memory and context
+#   - clarification_protocol: When/how to ask for clarification
+#   - memory_update: How to update long-term memory
+#   - memory_point_examples: Examples of memory points
+#   - example_output: Example of a valid output
+#   - input_context: The actual notes, memory, and clarification Q&A
+#   - finalization_protocol: When/how to finalize output
+#   - custom_section: (Optional) Any custom text you want
+#
+# Tools available to the agent:
+#   - clarification_tool: Used to ask the user clarification questions if the agent is uncertain.
+#   - finalize_notes_tool: Used to return the final, structured, enriched output (entries, new_memory_points, clarification_questions).
+#
+# This comment is for human readers only and is not used by the code.
+
+sections:
+  # --- Agent Role & Mission ---
+  - name: intro
+    enabled: true
+    comment: "System introduction and agent persona."
+  - name: goals
+    enabled: true
+    comment: "Agent's main objectives."
+
+  # --- Interpretation & Evaluation ---
+  - name: output_schema_and_meanings
+    enabled: true
+    comment: "Unified output schema and field meanings (from YAML)."
+    params:
+      schema_file: resources/schema.yaml
+  - name: classification
+    enabled: true
+    comment: "Allowed entity types and intents (from YAML). Uses the file specified in params."
+    params:
+      classification_file: resources/classification.yaml
+  - name: scoring_guidelines
+    enabled: true
+    comment: "Note scoring/clarification triggers for evaluation."
+    params:
+      scoring_file: resources/scoring_metrics.yaml
+
+  # --- Scoring, Parameters & Validation ---
+  - name: parameter_explanations
+    enabled: true
+    comment: "Agent parameters and thresholds."
+  - name: output_validation_rules
+    enabled: true
+    comment: "Output requirements and constraints."
+
+  # --- Tooling ---
+  - name: tool_json_schema
+    enabled: true
+    comment: "JSON schema for finalize_notes_tool."
+  - name: tool_behavior_summary
+    enabled: true
+    comment: "How/when to use tools."
+
+  # --- Clarification & Context Usage ---
+  - name: context_usage
+    enabled: true
+    comment: "How to use memory/context."
+  - name: clarification_protocol
+    enabled: true
+    comment: "When/how to ask for clarification."
+
+  # --- Memory Management ---
+  - name: memory_update
+    enabled: true
+    comment: "How to update long-term memory."
+  - name: memory_point_examples
+    enabled: true
+    comment: "Examples of memory points."
+
+  # --- Examples ---
+  - name: example_output
+    enabled: true
+    comment: "Example of a valid output."
+
+  # --- Dynamic Input & Finalization ---
+  - name: input_context
+    enabled: true
+    comment: "The actual notes, memory, and clarification Q&A."
+  - name: finalization_protocol
+    enabled: true
+    comment: "When/how to finalize output."
+
+  # --- Custom/Extra ---
+  - name: custom_section
+    enabled: true
+    comment: "(Optional) Any custom text you want."
+    custom_text: "This is a custom section added via config!"  # Custom text for this section 

@@ -2,16 +2,16 @@
 DataEntry:
   interpreted_text:
     type: string
-    description: A full, self-contained, unambiguous sentence.
+    description: "A full, self-contained, unambiguous sentence."
   entity_type:
     type: string
-    description: Entity type, e.g., task, project, idea, etc.
+    description: "One of the allowed entity types."
   intent:
     type: string
-    description: Intent, e.g., @DO, @PLAN, etc.
+    description: "One of the allowed intents."
   clarity_score:
     type: integer
-    description: Clarity score (0-100) of the interpreted output.
+    description: "0–100, estimated clarity of the interpreted output."
 LLMOutput:
   entries:
     type: array

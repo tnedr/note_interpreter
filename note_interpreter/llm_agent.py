@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Callable, Any
 from note_interpreter.models import LLMOutput, DataEntry
 import os
 from dotenv import load_dotenv
@@ -37,8 +37,89 @@ def load_scoring_metrics_from_yaml(path: str) -> dict:
         return yaml.safe_load(f)
 
 class SystemPromptBuilder:
+    """
+    Config-driven, registry-based prompt builder. Each section is a function registered in a central registry.
+    The prompt is built by reading a YAML config file that specifies the order, enabled/disabled state, and parameters for each section.
+    """
+    section_registry: Dict[str, Callable[[dict, dict], str]] = {}
+
+    @classmethod
+    def register_section(cls, name: str):
+        def decorator(func):
+            cls.section_registry[name] = func
+            return func
+        return decorator
+
+    @classmethod
+    def build_from_config(cls, memory: List[str], notes: List[str], classification_config: dict = None, extra_context: Optional[dict] = None, schema: dict = None, parameters: dict = None, scoring_metrics: dict = None, config_path: str = "resources/prompt_config.yaml") -> str:
+        """
+        Build the prompt from a YAML config file. Each enabled section is rendered in order.
+        Now supports loading classification config from the file specified in the 'classification' section params.
+        """
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+        sections = config.get('sections', [])
+        # Check if classification section has a file param
+        classification_file = None
+        for section in sections:
+            if section.get('name') == 'classification' and section.get('params', {}).get('classification_file'):
+                classification_file = section['params']['classification_file']
+                break
+        if classification_file:
+            with open(classification_file, 'r', encoding='utf-8') as f:
+                loaded_classification_config = yaml.safe_load(f)
+        else:
+            loaded_classification_config = classification_config or {}
+        context = {
+            'memory': memory,
+            'notes': notes,
+            'classification_config': loaded_classification_config,
+            'extra_context': extra_context or {},
+            'schema': schema or {},
+            'parameters': parameters or {},
+            'scoring_metrics': scoring_metrics or {},
+        }
+        prompt_parts = []
+        for section in sections:
+            if not section.get('enabled', True):
+                continue
+            name = section['name']
+            params = section.get('params', {})
+            custom_text = section.get('custom_text')
+            # Custom text/override
+            if custom_text:
+                prompt_parts.append(custom_text)
+                continue
+            func = cls.section_registry.get(name)
+            if func:
+                try:
+                    part = func(params, context)
+                    prompt_parts.append(part)
+                except Exception as e:
+                    logging.warning(f"Prompt section '{name}' failed: {e}")
+            else:
+                logging.warning(f"Prompt section '{name}' not found in registry.")
+        return "\n".join([p for p in prompt_parts if p])
+
+    @classmethod
+    def build(cls, memory: List[str], notes: List[str], classification_config: dict = None, extra_context: Optional[dict] = None, schema: dict = None, parameters: dict = None, scoring_metrics: dict = None, config_path: str = None) -> str:
+        """
+        Backward-compatible build method. Uses config if provided, else default config.
+        """
+        if config_path is None:
+            config_path = "resources/prompt_config.yaml"
+        return cls.build_from_config(memory, notes, classification_config, extra_context, schema, parameters, scoring_metrics, config_path)
+
+    # --- Section Implementations ---
     @staticmethod
-    def classification_section(classification_config: dict) -> str:
+    @register_section('intro')
+    def intro_section(params, context):
+        return "# 🤖 System Prompt: AI Note Interpretation & Enrichment Agent\n\nYou are an AI assistant that helps users interpret, clarify, and enrich their personal notes for life management, project tracking, and self-improvement. Your job is to turn ambiguous, shorthand, or incomplete notes into clear, actionable, and structured data, asking for clarification if needed, and updating long-term memory with new insights.\n"
+
+    @staticmethod
+    @register_section('classification')
+    def classification_section(params, context):
+        classification_config = context['classification_config']
         entity_types = classification_config.get("entity_types", [])
         intents = classification_config.get("intents", [])
         return (
@@ -48,7 +129,8 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    def goals_section() -> str:
+    @register_section('goals')
+    def goals_section(params, context):
         return (
             "## 🎯 Your Goals\n\n"
             "For each input note, your output must include:\n"
@@ -60,7 +142,10 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    def note_scoring_guidelines_section(scoring_metrics: dict = None, parameters: dict = None) -> str:
+    @register_section('scoring_guidelines')
+    def note_scoring_guidelines_section(params, context):
+        scoring_metrics = context['scoring_metrics']
+        parameters = context['parameters']
         if not scoring_metrics:
             return ""
         section = "## 🧪 Note Scoring Guidelines\n\nEach note is internally evaluated using the following metrics (not shown in output but used for clarification logic):\n\n"
@@ -81,41 +166,24 @@ class SystemPromptBuilder:
         return section
 
     @staticmethod
-    def output_schema_section(classification_config: dict = None) -> str:
-        # Use all entity types/intents from YAML
-        entity_types = classification_config.get("entity_types", []) if classification_config else []
-        intents = classification_config.get("intents", []) if classification_config else []
-        entity_types_str = ', '.join(entity_types)
-        intents_str = ', '.join(intents)
-        return (
-            "## 📌 Structured Output Schema\n\n"
-            "Each `entry` must follow this structure:\n"
-            "- `interpreted_text` (str): A full, self-contained, unambiguous sentence.\n"
-            f"- `entity_type` (str): One of the allowed YAML-defined types: {entity_types_str}\n"
-            f"- `intent` (str): One of the allowed YAML-defined intents: {intents_str}\n"
-            "- `clarity_score` (int): 0–100, estimated clarity of the interpreted output\n\n"
-            "Use only entity_type and intent values defined in the YAML file unless clearly missing. Mark missing ones with MISSING_suggested:.\n"
-            "⚠️ If `entity_type` or `intent` fall outside the YAML list, flag them using this format:\n"
-            "- `MISSING_suggested:goal` or `MISSING_suggested:@DEFINE`\n"
-        )
-
-    @staticmethod
-    def output_field_meanings_section(schema: dict) -> str:
-        section = "## 📝 Output Field Meanings\n\n"
+    @register_section('output_schema_and_meanings')
+    def output_schema_and_meanings_section(params, context):
+        """
+        Unified output schema and field meanings, loaded from YAML.
+        params['schema_file'] should specify the YAML file.
+        """
+        schema_file = params.get('schema_file', 'resources/schema.yaml')
+        import yaml as _yaml
+        with open(schema_file, 'r', encoding='utf-8') as f:
+            schema = _yaml.safe_load(f)
+        section = "## 📌 Structured Output Schema & Field Meanings\n\nEach entry must have the following fields:\n\n"
         for field, info in schema.get('DataEntry', {}).items():
-            section += f"- `{field}` ({info['type']}): {info['description']}\n"
+            section += f"- `{field}` ({info.get('type','')}): {info.get('description','')}\n"
         return section
 
     @staticmethod
-    def parameter_explanations_section(parameters: dict) -> str:
-        section = "## ⚙️ Agent Parameters\n\n"
-        for param, info in parameters.items():
-            section += f"- `{param}` = {info['value']} ({info['description']})\n"
-        return section
-
-    @staticmethod
-    def tool_json_schema_section() -> str:
-        # This matches the finalize_notes_tool schema in code
+    @register_section('tool_json_schema')
+    def tool_json_schema_section(params, context):
         schema = {
             "type": "object",
             "properties": {
@@ -143,7 +211,17 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    def output_validation_rules_section() -> str:
+    @register_section('parameter_explanations')
+    def parameter_explanations_section(params, context):
+        parameters = context['parameters']
+        section = "## ⚙️ Agent Parameters\n\n"
+        for param, info in parameters.items():
+            section += f"- `{param}` = {info['value']} ({info['description']})\n"
+        return section
+
+    @staticmethod
+    @register_section('output_validation_rules')
+    def output_validation_rules_section(params, context):
         return (
             "## 🔒 Output Validation Rules (Mandatory)\n\n"
             "- You MUST return a valid JSON object calling `finalize_notes_tool`.\n"
@@ -153,7 +231,8 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    def tool_behavior_summary_section() -> str:
+    @register_section('tool_behavior_summary')
+    def tool_behavior_summary_section(params, context):
         return (
             "## 🛠️ Tool Behavior Summary\n\n"
             "- `finalize_notes_tool(...)` is the only valid way to output results.\n"
@@ -164,7 +243,8 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    def context_usage_section() -> str:
+    @register_section('context_usage')
+    def context_usage_section(params, context):
         return (
             "## 🧠 Context Usage\n\n"
             "- Use **user memory** to resolve ambiguity and improve interpretation.\n"
@@ -173,7 +253,8 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    def clarification_protocol_section() -> str:
+    @register_section('clarification_protocol')
+    def clarification_protocol_section(params, context):
         return (
             "## 🔍 Clarification Protocol\n\n"
             "If interpretation is uncertain:\n"
@@ -198,7 +279,8 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    def memory_update_section() -> str:
+    @register_section('memory_update')
+    def memory_update_section(params, context):
         return (
             "## 🧠 Memory Update Rules\n\n"
             "For every finalized interpretation:\n"
@@ -211,7 +293,8 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    def memory_point_examples_section() -> str:
+    @register_section('memory_point_examples')
+    def memory_point_examples_section(params, context):
         return (
             "## 📘 Memory Point Examples\n\n"
             "* Tamas is currently working on a Q3 marketing launch plan and often refers to it simply as 'plan.'\n"
@@ -220,7 +303,8 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    def example_output_section() -> str:
+    @register_section('example_output')
+    def example_output_section(params, context):
         return (
             "## 🧮 Example Entry Output (JSON)\n\n"
             "```json\n"
@@ -242,7 +326,11 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    def input_context_section(memory: List[str], notes: List[str], clarification_qas: Optional[list]) -> str:
+    @register_section('input_context')
+    def input_context_section(params, context):
+        memory = context['memory']
+        notes = context['notes']
+        clarification_qas = context['extra_context'].get('clarification_qas')
         section = "---\n\n## 🔎 Input Context\n\n"
         section += "### Current Memory:\n"
         if memory:
@@ -261,7 +349,8 @@ class SystemPromptBuilder:
         return section
 
     @staticmethod
-    def finalization_protocol_section() -> str:
+    @register_section('finalization_protocol')
+    def finalization_protocol_section(params, context):
         return (
             "## 🛑 Finalization Protocol\n\n"
             "- After providing the final structured output, do not ask further questions. The conversation is finished.\n"
@@ -270,31 +359,6 @@ class SystemPromptBuilder:
             "  - Use `\"UNDEFINED\"` for any field that cannot be confidently determined.\n"
             "  - Still call the `finalize_notes_tool` with all fields included.\n"
         )
-
-    @staticmethod
-    def build(memory: List[str], notes: List[str], classification_config: dict = None, extra_context: Optional[dict] = None, schema: dict = None, parameters: dict = None, scoring_metrics: dict = None) -> str:
-        clarification_qas = extra_context.get('clarification_qas') if extra_context else None
-        parts = [
-            "# 🤖 System Prompt: AI Note Interpretation & Enrichment Agent\n",
-            "You are an AI assistant that helps users interpret, clarify, and enrich their personal notes for life management, project tracking, and self-improvement. Your job is to turn ambiguous, shorthand, or incomplete notes into clear, actionable, and structured data, asking for clarification if needed, and updating long-term memory with new insights.\n",
-            SystemPromptBuilder.classification_section(classification_config or {}),
-            SystemPromptBuilder.goals_section(),
-            SystemPromptBuilder.note_scoring_guidelines_section(scoring_metrics, parameters),
-            SystemPromptBuilder.output_schema_section(classification_config),
-            SystemPromptBuilder.output_field_meanings_section(schema or {}),
-            SystemPromptBuilder.tool_json_schema_section(),
-            SystemPromptBuilder.parameter_explanations_section(parameters or {}),
-            SystemPromptBuilder.output_validation_rules_section(),
-            SystemPromptBuilder.tool_behavior_summary_section(),
-            SystemPromptBuilder.context_usage_section(),
-            SystemPromptBuilder.clarification_protocol_section(),
-            SystemPromptBuilder.memory_update_section(),
-            SystemPromptBuilder.memory_point_examples_section(),
-            SystemPromptBuilder.example_output_section(),
-            SystemPromptBuilder.input_context_section(memory, notes, clarification_qas),
-            SystemPromptBuilder.finalization_protocol_section()
-        ]
-        return "\n".join([part for part in parts if part])
 
 class ClarificationManager:
     """Handles clarification logic for the agent."""
@@ -478,11 +542,11 @@ class LLMAgent:
                             print("\nClarification questions:")
                             for i, q in enumerate(questions, 1):
                                 print(f"{i}: {q}")
-                            answers = []
-                            for i, q in enumerate(questions, 1):
-                                a = input(f"Your answer to '{q}': ")
-                                answers.append((q, a))
-                            clarification_qas.extend(answers)
+                        answers = []
+                        for i, q in enumerate(questions, 1):
+                            a = input(f"Your answer to '{q}': ")
+                            answers.append((q, a))
+                        clarification_qas.extend(answers)
                         continue  # Next round with updated Q&A
                     elif tool_name == "finalize_notes_tool":
                         final_output = OutputFormatter.format(output_data)
@@ -506,6 +570,17 @@ class LLMAgent:
         if self.debug_mode:
             logging.debug(f"Final output (fallback): {final_output}")
         return final_output
+
+    def _is_fallback_output(self, output: LLMOutput) -> bool:
+        """Returns True if the output is a fallback/placeholder (e.g., UNDEFINED fields)."""
+        for entry in output.entries:
+            if (
+                entry.interpreted_text == "UNDEFINED"
+                or entry.entity_type == "UNDEFINED"
+                or entry.intent == "UNDEFINED"
+            ):
+                return True
+        return False
 
 if __name__ == "__main__":
     # Example usage

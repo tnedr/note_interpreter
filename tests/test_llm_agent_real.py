@@ -16,6 +16,16 @@ def get_real_test_data():
     classification_config = load_classification_from_yaml("resources/classification.yaml")
     return notes, memory, classification_config
 
+def is_fallback_output(output):
+    for entry in output.entries:
+        if (
+            getattr(entry, 'interpreted_text', None) == "UNDEFINED"
+            or getattr(entry, 'entity_type', None) == "UNDEFINED"
+            or getattr(entry, 'intent', None) == "UNDEFINED"
+        ):
+            return True
+    return False
+
 @pytest.mark.llm
 def test_agent_real_llm():
     """
@@ -33,6 +43,7 @@ def test_agent_real_llm():
     assert isinstance(output, LLMOutput)
     assert hasattr(output, 'entries')
     assert hasattr(output, 'new_memory_points')
+    assert not is_fallback_output(output), f"Agent returned fallback/placeholder output: {output}"
     for entry in output.entries:
         assert hasattr(entry, 'interpreted_text')
         assert hasattr(entry, 'entity_type')
@@ -56,9 +67,9 @@ def test_agent_real_llm_clarification():
     print(output)
     print("\n--- END REAL LLM CLARIFICATION OUTPUT ---\n")
     assert isinstance(output, LLMOutput)
-    # Accept either clarification or finalized output
     assert hasattr(output, 'entries')
     assert hasattr(output, 'new_memory_points')
+    assert not is_fallback_output(output), f"Agent returned fallback/placeholder output: {output}"
     for entry in output.entries:
         assert hasattr(entry, 'interpreted_text')
         assert hasattr(entry, 'entity_type')
@@ -87,8 +98,8 @@ def test_agent_real_llm_multiple_notes():
     print("\n--- END REAL LLM MULTIPLE NOTES OUTPUT ---\n")
     assert isinstance(output, LLMOutput)
     assert hasattr(output, 'entries')
-    # Should have at least as many entries as notes (or clarifications if needed)
     assert len(output.entries) >= 1
+    assert not is_fallback_output(output), f"Agent returned fallback/placeholder output: {output}"
     for entry in output.entries:
         assert hasattr(entry, 'interpreted_text')
         assert hasattr(entry, 'entity_type')
@@ -111,4 +122,5 @@ def test_agent_real_llm_edge_case_empty():
     print("\n--- REAL LLM EDGE CASE EMPTY OUTPUT ---\n")
     print(output)
     print("\n--- END REAL LLM EDGE CASE EMPTY OUTPUT ---\n")
-    assert isinstance(output, LLMOutput) 
+    assert isinstance(output, LLMOutput)
+    assert not is_fallback_output(output), f"Agent returned fallback/placeholder output: {output}" 

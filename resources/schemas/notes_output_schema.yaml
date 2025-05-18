@@ -1,0 +1,38 @@
+# Schema for a single interpreted/enriched note (DataEntry)
+DataEntry:
+  raw_text:
+    type: string
+    description: "The original, unprocessed user note as entered."
+  interpreted_text:
+    type: string
+    description: "The final, clear, enriched version of the user's note, fully self-contained and unambiguous."
+  entity_type:
+    type: string
+    description: "The classification of the note (e.g., task, idea, project). Must be one of the allowed entity types."
+  intent:
+    type: string
+    description: "The intent of the note (e.g., @DO, @PLAN, @INFO). Must be one of the allowed intents."
+  clarity_score:
+    type: integer
+    description: "Clarity score (0–100): how clear and unambiguous the interpretation is. Higher is better."
+    range: "0-100"
+    clarification_trigger: below
+    clarification_threshold: 70
+  ambiguity_score:
+    type: integer
+    description: "Ambiguity score (0–100): how ambiguous or unclear the note is. Higher means more ambiguous."
+    range: "0-100"
+    clarification_trigger: above
+    clarification_threshold: 60
+  interpretability:
+    type: integer
+    description: "Interpretability (0–100): how clearly the note maps to known memory or patterns."
+    range: "0-100"
+  understandability:
+    type: integer
+    description: "Understandability (0–100): how grammatically complete and parseable the note is."
+    range: "0-100"
+  clarification_questions:
+    type: array
+    items: string
+    description: "Clarification questions to ask the user if the note is ambiguous or unclear. (Optional)" 

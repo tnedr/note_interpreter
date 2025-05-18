@@ -1,0 +1,14 @@
+# Schema for the overall LLM agent output (LLMOutput)
+LLMOutput:
+  entries:
+    type: array
+    items: DataEntry  # Reference to DataEntry in notes_output_schema.yaml
+    description: "List of structured data entries for each note, each following the DataEntry schema."
+  new_memory_points:
+    type: array
+    items: string
+    description: "New bullet points to append to the Markdown memory, summarizing new insights or clarified terms."
+  clarification_questions:
+    type: array
+    items: string
+    description: "Clarification questions to ask the user if needed, at the batch level." 
