@@ -63,6 +63,35 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
+    def tool_json_schema_section() -> str:
+        # This matches the finalize_notes_tool schema in code
+        schema = {
+            "type": "object",
+            "properties": {
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "interpreted_text": {"type": "string"},
+                            "entity_type": {"type": "string"},
+                            "intent": {"type": "string"},
+                            "clarity_score": {"type": "integer"}
+                        },
+                        "required": ["interpreted_text", "entity_type", "intent", "clarity_score"]
+                    }
+                },
+                "new_memory_points": {"type": "array", "items": {"type": "string"}},
+                "clarification_questions": {"type": "array", "items": {"type": "string"}}
+            },
+            "required": ["entries", "new_memory_points", "clarification_questions"]
+        }
+        return (
+            "## 🛠️ Tool JSON Schema (for finalize_notes_tool)\n\n"
+            "```json\n" + json.dumps(schema, indent=2) + "\n```\n"
+        )
+
+    @staticmethod
     def context_usage_section() -> str:
         return (
             "## 🧠 Context Usage\n\n"
@@ -163,9 +192,11 @@ class SystemPromptBuilder:
         clarification_qas = extra_context.get('clarification_qas') if extra_context else None
         parts = [
             "# 🤖 System Prompt: AI Note Interpretation & Enrichment Agent\n",
+            "You are an AI assistant that helps users interpret, clarify, and enrich their personal notes for life management, project tracking, and self-improvement. Your job is to turn ambiguous, shorthand, or incomplete notes into clear, actionable, and structured data, asking for clarification if needed, and updating long-term memory with new insights.\n",
             SystemPromptBuilder.classification_section(classification_config or {}),
             SystemPromptBuilder.goals_section(),
             SystemPromptBuilder.output_schema_section(),
+            SystemPromptBuilder.tool_json_schema_section(),
             SystemPromptBuilder.context_usage_section(),
             SystemPromptBuilder.clarification_protocol_section(),
             SystemPromptBuilder.memory_update_section(),
@@ -349,7 +380,7 @@ class LLMAgent:
                 continue
         # If max rounds reached, finalize with placeholders
         logging.warning("Maximum clarification rounds reached. Finalizing with placeholders if needed.")
-        entries = [DataEntry(field1="UNDEFINED", field2=-1)]
+        entries = [DataEntry(interpreted_text="UNDEFINED", entity_type="UNDEFINED", intent="UNDEFINED", clarity_score=0)]
         new_memory_points = ["Clarification incomplete. Some fields may be undefined."]
         final_output = LLMOutput(entries=entries, new_memory_points=new_memory_points)
         if self.debug_mode:

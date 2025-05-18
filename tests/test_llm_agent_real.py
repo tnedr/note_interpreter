@@ -31,6 +31,13 @@ def test_agent_real_llm():
     print(output)
     print("\n--- END REAL LLM OUTPUT ---\n")
     assert isinstance(output, LLMOutput)
+    assert hasattr(output, 'entries')
+    assert hasattr(output, 'new_memory_points')
+    for entry in output.entries:
+        assert hasattr(entry, 'interpreted_text')
+        assert hasattr(entry, 'entity_type')
+        assert hasattr(entry, 'intent')
+        assert hasattr(entry, 'clarity_score')
 
 @pytest.mark.llm
 def test_agent_real_llm_clarification():
@@ -52,6 +59,11 @@ def test_agent_real_llm_clarification():
     # Accept either clarification or finalized output
     assert hasattr(output, 'entries')
     assert hasattr(output, 'new_memory_points')
+    for entry in output.entries:
+        assert hasattr(entry, 'interpreted_text')
+        assert hasattr(entry, 'entity_type')
+        assert hasattr(entry, 'intent')
+        assert hasattr(entry, 'clarity_score')
 
 @pytest.mark.llm
 def test_agent_real_llm_multiple_notes():
@@ -77,6 +89,11 @@ def test_agent_real_llm_multiple_notes():
     assert hasattr(output, 'entries')
     # Should have at least as many entries as notes (or clarifications if needed)
     assert len(output.entries) >= 1
+    for entry in output.entries:
+        assert hasattr(entry, 'interpreted_text')
+        assert hasattr(entry, 'entity_type')
+        assert hasattr(entry, 'intent')
+        assert hasattr(entry, 'clarity_score')
 
 @pytest.mark.llm
 def test_agent_real_llm_edge_case_empty():

@@ -23,11 +23,12 @@ class NoteBatch(BaseModel):
 class DataEntry(BaseModel):
     """
     Represents a single structured data entry returned by the LLM agent.
-    Extend fields as needed to match the output requirements.
+    Fields match the output schema: interpreted_text, entity_type, intent, clarity_score.
     """
-    field1: str = Field(..., description="Description for field1")
-    field2: int = Field(..., description="Description for field2")
-    # Add more fields as needed
+    interpreted_text: str = Field(..., description="A full, self-contained, unambiguous sentence.")
+    entity_type: str = Field(..., description="Entity type, e.g., task, project, idea, etc.")
+    intent: str = Field(..., description="Intent, e.g., @DO, @PLAN, etc.")
+    clarity_score: int = Field(..., description="Clarity score (0-100) of the interpreted output.")
 
 class LLMOutput(BaseModel):
     """

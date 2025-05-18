@@ -17,8 +17,10 @@ def test_llm_agent_pilot():
     assert isinstance(output.new_memory_points, list)
     assert len(output.entries) > 0
     for entry in output.entries:
-        assert hasattr(entry, 'field1')
-        assert hasattr(entry, 'field2')
+        assert hasattr(entry, 'interpreted_text')
+        assert hasattr(entry, 'entity_type')
+        assert hasattr(entry, 'intent')
+        assert hasattr(entry, 'clarity_score')
 
 def test_agent_initialization():
     agent = LLMAgent(notes=["test"], user_memory=["* memory"], debug_mode=True)
@@ -40,7 +42,7 @@ def test_mock_output_no_api_key(monkeypatch):
     agent = LLMAgent(notes=["test"], user_memory=["* memory"])
     output = agent.run()
     assert isinstance(output, LLMOutput)
-    assert output.entries[0].field1 == "example1"
+    assert output.entries[0].interpreted_text == "example1"
 
 def test_finalization_on_max_rounds(monkeypatch):
     # Simulate LLM always returning ambiguous output (forces max rounds)
@@ -49,9 +51,9 @@ def test_finalization_on_max_rounds(monkeypatch):
             return {"output": "Some ambiguous string"}
     agent = LLMAgent(notes=["ambiguous"], user_memory=["* memory"], max_clarification_rounds=1)
     # Patch the run method to simulate max rounds reached
-    monkeypatch.setattr(agent, "run", lambda: LLMOutput(entries=[DataEntry(field1="UNDEFINED", field2=-1)], new_memory_points=["Clarification incomplete. Some fields may be undefined."]))
+    monkeypatch.setattr(agent, "run", lambda: LLMOutput(entries=[DataEntry(interpreted_text="UNDEFINED", entity_type="UNDEFINED", intent="UNDEFINED", clarity_score=0)], new_memory_points=["Clarification incomplete. Some fields may be undefined."]))
     output = agent.run()
-    assert output.entries[0].field1 == "UNDEFINED"
+    assert output.entries[0].interpreted_text == "UNDEFINED"
 
 def test_system_prompt_builder_modular():
     memory = ["Remember to always check the date.", "User prefers concise answers."]
@@ -178,8 +180,8 @@ def test_edge_cases(monkeypatch):
     assert agent.notes == []
     assert agent.user_memory == []
     # Unknown entity type/intent (simulate output)
-    output = LLMOutput(entries=[DataEntry(field1="note", field2=1)], new_memory_points=["* unknown entity type"])
-    assert output.entries[0].field1 == "note"
+    output = LLMOutput(entries=[DataEntry(interpreted_text="note", entity_type="task", intent="@DO", clarity_score=100)], new_memory_points=["* unknown entity type"])
+    assert output.entries[0].interpreted_text == "note"
     # Clarification limit exceeded (simulate)
     agent = LLMAgent(notes=["unclear"], user_memory=["* memory"], max_clarification_rounds=0, classification_config={'entity_types': ['task'], 'intents': ['@DO']})
     # Mock input to avoid hanging
@@ -222,7 +224,7 @@ def test_tool_invocation_sequence_and_args(monkeypatch):
     assert dummy_core.calls[0][0] == 'clarification_tool'
     assert dummy_core.calls[1][0] == 'finalize_notes_tool'
     # Check that the clarification answer is present in the final output
-    assert output.entries[0].field1 == "clarified stuff"
+    assert output.entries[0].interpreted_text == "clarified stuff"
     assert "clarified stuff" in output.new_memory_points[0]
 
 def test_tool_invocation_edge_case(monkeypatch):
@@ -245,6 +247,6 @@ def test_tool_invocation_edge_case(monkeypatch):
     monkeypatch.setattr('builtins.input', lambda prompt: "clarified answer")
     # Should finalize with placeholders after not recognizing the tool
     output = agent.run()
-    assert output.entries[0].field1 == "UNDEFINED" or output.entries[0].field1 == "clarified answer"  # Accept either fallback or answer
+    assert output.entries[0].interpreted_text == "UNDEFINED" or output.entries[0].interpreted_text == "clarified answer"  # Accept either fallback or answer
 
 # You can add more tests for tool call handling, clarification loop, etc. 
