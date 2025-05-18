@@ -112,12 +112,10 @@ class SystemPromptBuilder:
 
     # --- Section Implementations ---
     @staticmethod
-    @register_section('intro')
     def intro_section(params, context):
         return "# 🤖 System Prompt: AI Note Interpretation & Enrichment Agent\n\nYou are an AI assistant that helps users interpret, clarify, and enrich their personal notes for life management, project tracking, and self-improvement. Your job is to turn ambiguous, shorthand, or incomplete notes into clear, actionable, and structured data, asking for clarification if needed, and updating long-term memory with new insights.\n"
 
     @staticmethod
-    @register_section('classification')
     def classification_section(params, context):
         classification_config = context['classification_config']
         entity_types = classification_config.get("entity_types", [])
@@ -129,7 +127,6 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    @register_section('goals')
     def goals_section(params, context):
         return (
             "## 🎯 Your Goals\n\n"
@@ -142,7 +139,6 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    @register_section('scoring_guidelines')
     def note_scoring_guidelines_section(params, context):
         scoring_metrics = context['scoring_metrics']
         parameters = context['parameters']
@@ -166,7 +162,6 @@ class SystemPromptBuilder:
         return section
 
     @staticmethod
-    @register_section('output_schema_and_meanings')
     def output_schema_and_meanings_section(params, context):
         """
         Unified output schema and field meanings, loaded from YAML.
@@ -182,7 +177,6 @@ class SystemPromptBuilder:
         return section
 
     @staticmethod
-    @register_section('tool_json_schema')
     def tool_json_schema_section(params, context):
         schema = {
             "type": "object",
@@ -211,7 +205,6 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    @register_section('parameter_explanations')
     def parameter_explanations_section(params, context):
         parameters = context['parameters']
         section = "## ⚙️ Agent Parameters\n\n"
@@ -220,7 +213,6 @@ class SystemPromptBuilder:
         return section
 
     @staticmethod
-    @register_section('output_validation_rules')
     def output_validation_rules_section(params, context):
         return (
             "## 🔒 Output Validation Rules (Mandatory)\n\n"
@@ -231,7 +223,6 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    @register_section('tool_behavior_summary')
     def tool_behavior_summary_section(params, context):
         return (
             "## 🛠️ Tool Behavior Summary\n\n"
@@ -243,7 +234,6 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    @register_section('context_usage')
     def context_usage_section(params, context):
         return (
             "## 🧠 Context Usage\n\n"
@@ -253,7 +243,6 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    @register_section('clarification_protocol')
     def clarification_protocol_section(params, context):
         return (
             "## 🔍 Clarification Protocol\n\n"
@@ -279,7 +268,6 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    @register_section('memory_update')
     def memory_update_section(params, context):
         return (
             "## 🧠 Memory Update Rules\n\n"
@@ -293,7 +281,6 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    @register_section('memory_point_examples')
     def memory_point_examples_section(params, context):
         return (
             "## 📘 Memory Point Examples\n\n"
@@ -303,7 +290,6 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    @register_section('example_output')
     def example_output_section(params, context):
         return (
             "## 🧮 Example Entry Output (JSON)\n\n"
@@ -326,7 +312,6 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    @register_section('input_context')
     def input_context_section(params, context):
         memory = context['memory']
         notes = context['notes']
@@ -349,7 +334,6 @@ class SystemPromptBuilder:
         return section
 
     @staticmethod
-    @register_section('finalization_protocol')
     def finalization_protocol_section(params, context):
         return (
             "## 🛑 Finalization Protocol\n\n"
@@ -359,6 +343,24 @@ class SystemPromptBuilder:
             "  - Use `\"UNDEFINED\"` for any field that cannot be confidently determined.\n"
             "  - Still call the `finalize_notes_tool` with all fields included.\n"
         )
+
+# Register all section methods after class definition
+SystemPromptBuilder.register_section('intro')(SystemPromptBuilder.intro_section)
+SystemPromptBuilder.register_section('classification')(SystemPromptBuilder.classification_section)
+SystemPromptBuilder.register_section('goals')(SystemPromptBuilder.goals_section)
+SystemPromptBuilder.register_section('scoring_guidelines')(SystemPromptBuilder.note_scoring_guidelines_section)
+SystemPromptBuilder.register_section('output_schema_and_meanings')(SystemPromptBuilder.output_schema_and_meanings_section)
+SystemPromptBuilder.register_section('tool_json_schema')(SystemPromptBuilder.tool_json_schema_section)
+SystemPromptBuilder.register_section('parameter_explanations')(SystemPromptBuilder.parameter_explanations_section)
+SystemPromptBuilder.register_section('output_validation_rules')(SystemPromptBuilder.output_validation_rules_section)
+SystemPromptBuilder.register_section('tool_behavior_summary')(SystemPromptBuilder.tool_behavior_summary_section)
+SystemPromptBuilder.register_section('context_usage')(SystemPromptBuilder.context_usage_section)
+SystemPromptBuilder.register_section('clarification_protocol')(SystemPromptBuilder.clarification_protocol_section)
+SystemPromptBuilder.register_section('memory_update')(SystemPromptBuilder.memory_update_section)
+SystemPromptBuilder.register_section('memory_point_examples')(SystemPromptBuilder.memory_point_examples_section)
+SystemPromptBuilder.register_section('example_output')(SystemPromptBuilder.example_output_section)
+SystemPromptBuilder.register_section('input_context')(SystemPromptBuilder.input_context_section)
+SystemPromptBuilder.register_section('finalization_protocol')(SystemPromptBuilder.finalization_protocol_section)
 
 class ClarificationManager:
     """Handles clarification logic for the agent."""
