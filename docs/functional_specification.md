@@ -24,15 +24,36 @@ entity_types:
   - task
   - project
   - idea
-  - log
-  - reference
+  - note
   - routine
+  - reference
+  - log
+  - conversation
+  - wish
+  - trigger
+  - feedback
+  - signal
+  - bookmark
+  - role
+  - template
+  - suggestion
+  - decision
+  - question
+  - insight
+  - hypothesis
+  - workflow
 intents:
   - @DO
   - @THINK
   - @PLAN
+  - @BUILD
+  - @LEARN
   - @REVIEW
+  - @MEET
+  - @BUY
   - @WAITING
+  - @REFLECT
+  - @DECIDE
 ```
 
 - This classification file is used during metadata enrichment (see Section 3.4) to validate outputs and enforce consistency with user-defined vocabularies.
@@ -85,9 +106,9 @@ Each note is scored by the AI considering:
 | Score              | Range | Description |
 |-------------------|-------|-------------|
 | understandability  | 0–100 | grammar and clarity for AI parsing |
-| interpretability   | 0–100 | AI’s ability to map meaning to user memory/context |
+| interpretability   | 0–100 | AI's ability to map meaning to user memory/context |
 | ambiguity          | 0–100 | multiple valid interpretations requiring clarification |
-| confidence         | 0–100 | AI’s certainty in chosen interpretation |
+| confidence         | 0–100 | AI's certainty in chosen interpretation |
 
 > **Clarification Trigger:**
 > If `confidence < 70` or `ambiguity > 60`, system initiates a clarification dialog. See Section 5 for configurable threshold values.
@@ -137,7 +158,7 @@ This preserves structure while allowing downstream review and potential YAML ext
 
 ### 3.5 Step 5: Long-Term Memory Update
 
-> ⚠️ Note: The specific mechanisms by which the LLM agent processes notes, prompts for clarification, and finalizes interpretation are defined in the system’s Technical Design Document.
+> ⚠️ Note: The specific mechanisms by which the LLM agent processes notes, prompts for clarification, and finalizes interpretation are defined in the system's Technical Design Document.
 
 
 After processing (including interpretation and optional clarification), the system appends relevant information to the narrative-style user memory. This ensures future improvements in AI interpretation and clarification.
@@ -211,12 +232,12 @@ _This system does not push enriched notes into downstream systems directly. It p
 
 ## 9. 🧠 User Memory Update
 
-> ⚠️ Note: The orchestration of LLM behavior (e.g., using memory and batch inputs to generate clarifications and enriched notes) is handled by the system’s LLM agent, as described in the Technical Design Document.
+> ⚠️ Note: The orchestration of LLM behavior (e.g., using memory and batch inputs to generate clarifications and enriched notes) is handled by the system's LLM agent, as described in the Technical Design Document.
 
 The system maintains and evolves a narrative-style user memory that stores relevant personal context, behavioral patterns, goals, and interpreted semantics. This memory enables the system to improve its understanding of shorthand, preferences, and ambiguity over time.
 
 Append-Only Memory Behavior:
-The user memory is maintained as an append-only log. Once a memory entry is added, it is never modified or deleted. This approach ensures full traceability, auditability, and preserves the complete historical context of the user’s interactions.
+The user memory is maintained as an append-only log. Once a memory entry is added, it is never modified or deleted. This approach ensures full traceability, auditability, and preserves the complete historical context of the user's interactions.
 In future versions, the system may introduce mechanisms to mark entries as deprecated or archived when they become irrelevant (e.g., completed or closed projects). However, even then, no entries will be deleted or edited, maintaining the integrity of the historical record.
 
 ### 9.1 Update Triggers
@@ -245,7 +266,7 @@ User memory is recorded as a freeform narrative document written in natural lang
 
 Example:
 ```
-* Tamas is currently working on a Q3 marketing launch plan. He often uses shorthand like “plan” to refer to this. He prefers direct action phrasing like “continue working on.”
+* Tamas is currently working on a Q3 marketing launch plan. He often uses shorthand like "plan" to refer to this. He prefers direct action phrasing like "continue working on."
 
 * Tamas uses Make.com and Canva for automating Instagram post generation. He often journals ideas and project drafts in Logseq.
 ```
@@ -256,10 +277,10 @@ This memory:
 - Is included in LLM prompts during scoring, clarification, and interpretation phases.
 
 ### 9.3 Purpose and Benefits
-- To continuously improve the AI’s ability to interpret and clarify the user's notes.
+- To continuously improve the AI's ability to interpret and clarify the user's notes.
 - To reduce repetitive clarifications by learning from past interactions.
-- To tailor interpretations to the user’s style and preferences.
-- To allow the system to evolve in alignment with the user’s changing context.
+- To tailor interpretations to the user's style and preferences.
+- To allow the system to evolve in alignment with the user's changing context.
 
 
 ---
@@ -279,9 +300,9 @@ This memory:
 | Term              | Definition                                                                 |
 |-------------------|----------------------------------------------------------------------------|
 | Scoring           | Metric-based evaluation of notes, including clarity, ambiguity, and confidence |
-| Metadata          | Structured tags describing the note’s type and intent                     |
-| Entity Type       | Classification of the note’s content (e.g., task, idea, project)           |
-| Intent            | The user’s underlying goal or mental action (e.g., @DO, @PLAN, @THINK)     |
+| Metadata          | Structured tags describing the note's type and intent                     |
+| Entity Type       | Classification of the note's content (e.g., task, idea, project)           |
+| Intent            | The user's underlying goal or mental action (e.g., @DO, @PLAN, @THINK)     |
 
 **Output Concepts**
 

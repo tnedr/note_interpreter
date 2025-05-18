@@ -1,118 +1,310 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from note_interpreter.models import LLMOutput, DataEntry
 import os
 from dotenv import load_dotenv
 load_dotenv()
 from pydantic import BaseModel, Field
 import json
-import re
+from note_interpreter.agent_core import AgentCore, ToolDefinition, OpenAIToolProvider
+from langchain_openai import ChatOpenAI
 
-class StrictDataEntry(BaseModel):
-    field1: str = Field(..., description="Description for field1")
-    field2: int = Field(..., description="Description for field2")
-    class Config:
-        extra = "forbid"
+class MemoryManager:
+    """Handles loading and saving long-term memory."""
+    @staticmethod
+    def load_from_md(path: str) -> List[str]:
+        # Placeholder: actual implementation should parse markdown
+        with open(path, encoding='utf-8') as f:
+            lines = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+        return lines
 
-class StrictLLMOutput(BaseModel):
-    entries: List[StrictDataEntry] = Field(..., description="List of structured data entries.")
-    new_memory_points: List[str] = Field(..., description="New bullet points to append to the Markdown memory.")
-    class Config:
-        extra = "forbid"
+class SystemPromptBuilder:
+    @staticmethod
+    def goals_section() -> str:
+        return (
+            "## 🎯 Your Goals\n\n"
+            "For each input note, your output must include:\n"
+            "1. **Structured JSON Output** via the `finalize_notes_tool`, always including:\n"
+            "   - `entries`: interpreted notes with enriched metadata\n"
+            "   - `new_memory_points`: long-term memory insights (natural language bullet points)\n"
+            "   - `clarification_questions`: questions if clarification is needed\n"
+            "2. You MUST use the tool – never respond in plain text.\n"
+        )
+
+    @staticmethod
+    def output_schema_section() -> str:
+        return (
+            "## 📌 Structured Output Schema\n\n"
+            "Each `entry` must follow this structure:\n"
+            "- `interpreted_text` (str): A full, self-contained, unambiguous sentence.\n"
+            "- `entity_type` (str): One of the allowed YAML-defined types:\n"
+            "  - `task`, `project`, `idea`, `log`, `reference`, `routine`\n"
+            "- `intent` (str): One of the allowed YAML-defined intents:\n"
+            "  - `@DO`, `@THINK`, `@PLAN`, `@REVIEW`, `@WAITING`\n"
+            "- `clarity_score` (int): 0–100, estimated clarity of the interpreted output\n\n"
+            "⚠️ If `entity_type` or `intent` fall outside the YAML list, flag them using this format:\n"
+            "- `MISSING_suggested:goal` or `MISSING_suggested:@DEFINE`\n"
+        )
+
+    @staticmethod
+    def context_usage_section() -> str:
+        return (
+            "## 🧠 Context Usage\n\n"
+            "- Use **user memory** to resolve ambiguity and improve interpretation.\n"
+            "- Use **context from other notes** in the batch only if relevant.\n"
+            "- Always aim for clarity and actionability.\n"
+        )
+
+    @staticmethod
+    def clarification_protocol_section() -> str:
+        return (
+            "## 🔍 Clarification Protocol\n\n"
+            "If interpretation is uncertain:\n"
+            "- Generate clarification questions ONLY IF:\n"
+            "  - `confidence_score < 70`, OR\n"
+            "  - `ambiguity_score > 60`\n\n"
+            "If clarification is needed:\n"
+            "- List all questions in a single message, numbered:\n"
+            "  ```\n"
+            "  1: [question]\n"
+            "  2: [question]\n"
+            "  ```\n"
+            "- Ask the user to reply with:\n"
+            "  ```\n"
+            "  1: [answer]\n"
+            "  2: [answer]\n"
+            "  ```\n\n"
+            "If answers are received:\n"
+            "- Re-interpret the note with updated understanding.\n"
+            "- Repeat for up to **2 clarification rounds maximum**.\n"
+            "- If ambiguity persists, finalize output and use `UNDEFINED` or `MISSING_` flags.\n"
+        )
+
+    @staticmethod
+    def memory_update_section() -> str:
+        return (
+            "## 🧠 Memory Update Rules\n\n"
+            "For every finalized interpretation:\n"
+            "- Append memory points about:\n"
+            "  - Clarified terms or shorthand\n"
+            "  - Project references or tools\n"
+            "  - Patterns in phrasing or note structure\n"
+            "- Use natural language in bullet-point format (`* ...`)\n"
+            "- Never rewrite or delete past memory – this log is append-only.\n"
+        )
+
+    @staticmethod
+    def example_output_section() -> str:
+        return (
+            "## 🧮 Example Entry Output (JSON)\n\n"
+            "```json\n"
+            "{\n"
+            "  \"entries\": [\n"
+            "    {\n"
+            "      \"interpreted_text\": \"Continue working on the Q3 marketing launch plan.\",\n"
+            "      \"entity_type\": \"task\",\n"
+            "      \"intent\": \"@DO\",\n"
+            "      \"clarity_score\": 92\n"
+            "    }\n"
+            "  ],\n"
+            "  \"new_memory_points\": [\n"
+            "    \"* Tamas is currently working on a Q3 marketing launch plan and often uses 'plan' to refer to it.\"\n"
+            "  ],\n"
+            "  \"clarification_questions\": []\n"
+            "}\n"
+            "```\n"
+        )
+
+    @staticmethod
+    def input_context_section(memory: List[str], notes: List[str], clarification_qas: Optional[list]) -> str:
+        section = "---\n\n## 🔎 Input Context\n\n"
+        section += "### Current Memory:\n"
+        if memory:
+            section += "\n".join([f"* {m}" for m in memory]) + "\n\n"
+        else:
+            section += "(none)\n\n"
+        section += "### Current Notes:\n"
+        if notes:
+            section += "  \n".join(notes) + "  \n\n"
+        else:
+            section += "(none)\n\n"
+        if clarification_qas:
+            section += "### Clarification Q&A so far:\n"
+            for i, (q, a) in enumerate(clarification_qas, 1):
+                section += f"Q{i}: {q}  \nA{i}: {a}  \n"
+        return section
+
+    @staticmethod
+    def finalization_protocol_section() -> str:
+        return (
+            "## 🛑 Finalization Protocol\n\n"
+            "- After providing the final structured output, do not ask further questions. The conversation is finished.\n"
+            "- Never respond in plain text at any stage.\n"
+        )
+
+    @staticmethod
+    def build(memory: List[str], notes: List[str], extra_context: Optional[dict] = None) -> str:
+        clarification_qas = extra_context.get('clarification_qas') if extra_context else None
+        parts = [
+            "# 🤖 System Prompt: AI Note Interpretation & Enrichment Agent\n",
+            SystemPromptBuilder.goals_section(),
+            SystemPromptBuilder.output_schema_section(),
+            SystemPromptBuilder.context_usage_section(),
+            SystemPromptBuilder.clarification_protocol_section(),
+            SystemPromptBuilder.memory_update_section(),
+            SystemPromptBuilder.example_output_section(),
+            SystemPromptBuilder.input_context_section(memory, notes, clarification_qas),
+            SystemPromptBuilder.finalization_protocol_section()
+        ]
+        return "\n".join([part for part in parts if part])
+
+class ClarificationManager:
+    """Handles clarification logic for the agent."""
+    @staticmethod
+    def needs_clarification(agent_response: dict) -> bool:
+        return bool(agent_response.get('clarification_questions'))
+
+    @staticmethod
+    def get_questions(agent_response: dict) -> List[str]:
+        return agent_response.get('clarification_questions', [])
+
+    @staticmethod
+    def update_clarification_qas(clarification_qas: List[Tuple[str, str]], questions: List[str]) -> List[Tuple[str, str]]:
+        answers = []
+        for q in questions:
+            print(q)
+            a = input(f"Your answer to '{q}': ")
+            answers.append((q, a))
+        return clarification_qas + answers
+
+class OutputFormatter:
+    """Validates and formats the final output."""
+    @staticmethod
+    def format(agent_response: dict) -> LLMOutput:
+        entries = [DataEntry(**e) for e in agent_response.get('entries', [])]
+        new_memory_points = agent_response.get('new_memory_points', [])
+        return LLMOutput(entries=entries, new_memory_points=new_memory_points)
 
 class LLMAgent:
     """
-    LLM agent for MVP 2: prepares prompt and returns structured output using LangChain and OpenAI function-calling API.
-    Falls back to mock output if no API key is set.
+    Modular LLM agent using AgentCore for conversation and tool orchestration.
+    Handles memory, prompt building, clarification loop, and structured output.
+    Now uses two tools: 'clarification_tool' for clarification questions, and 'finalize_notes_tool' for final output.
     """
-    def __init__(self, notes: List[str], user_memory: List[str], classification_config: Optional[dict] = None):
+    def __init__(self, notes: List[str], user_memory: List[str], max_clarification_rounds: int = 2, debug_mode: bool = False, shared_context: Optional[dict] = None):
         self.notes = notes
         self.user_memory = user_memory
-        self.classification_config = classification_config or {}
+        self.max_clarification_rounds = max_clarification_rounds
+        self.debug_mode = debug_mode
+        self.shared_context = shared_context or {}
+        self.llm = ChatOpenAI(model="gpt-4.1-mini", openai_api_key=os.getenv("OPENAI_API_KEY"))
+        self.tools = [
+            self._get_finalize_notes_tool(),
+            self._get_clarification_tool()
+        ]
+        self.agent_core = AgentCore(
+            llm=self.llm,
+            tools=self.tools,
+            system_prompt=SystemPromptBuilder.build(self.user_memory, self.notes),
+            shared_context=self.shared_context,
+            debug_mode=self.debug_mode
+        )
 
-    def build_prompt(self) -> str:
-        """Construct the prompt for the LLM using notes and user memory."""
-        prompt = f"""
-You are an AI agent assisting with data entry.
+    def _get_finalize_notes_tool(self) -> ToolDefinition:
+        def finalize_notes_tool(entries=None, new_memory_points=None, clarification_questions=None, shared_context=None):
+            if entries is None:
+                entries = []
+            if new_memory_points is None:
+                new_memory_points = []
+            if clarification_questions is None:
+                clarification_questions = []
+            return {
+                "entries": entries,
+                "new_memory_points": new_memory_points,
+                "clarification_questions": clarification_questions
+            }
+        return ToolDefinition(
+            name="finalize_notes_tool",
+            description="Returns the final structured interpretation and enrichment of all notes.",
+            schema={
+                "type": "object",
+                "properties": {
+                    "entries": {"type": "array", "items": {"type": "object"}},
+                    "new_memory_points": {"type": "array", "items": {"type": "string"}},
+                    "clarification_questions": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["entries", "new_memory_points", "clarification_questions"]
+            },
+            function=finalize_notes_tool
+        )
 
-Current Memory:
-{chr(10).join(['* ' + m for m in self.user_memory])}
-
-Current Notes:
-{chr(10).join(self.notes)}
-
-Please interact with the user to collect the necessary information to complete the CSV and update the memory.
-"""
-        return prompt
+    def _get_clarification_tool(self) -> ToolDefinition:
+        def clarification_tool(questions=None, context=None, shared_context=None):
+            if questions is None:
+                questions = []
+            if context is None:
+                context = []
+            return {
+                "questions": questions,
+                "context": context
+            }
+        return ToolDefinition(
+            name="clarification_tool",
+            description="Poses clarification questions to the user in a structured way.",
+            schema={
+                "type": "object",
+                "properties": {
+                    "questions": {"type": "array", "items": {"type": "string"}},
+                    "context": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["questions"]
+            },
+            function=clarification_tool
+        )
 
     def run(self) -> LLMOutput:
-        """
-        Run the agent and return structured output conforming to LLMOutput schema.
-        Uses LangChain and OpenAI function-calling API if API key is set, otherwise returns mock output.
-        """
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            print("[LLMAgent] No OPENAI_API_KEY found. Using mock output.")
-            entries = [
-                DataEntry(field1="example1", field2=1),
-                DataEntry(field1="example2", field2=2)
-            ]
-            new_memory_points = ["Agent processed 2 notes. (MOCK)"]
-            return LLMOutput(entries=entries, new_memory_points=new_memory_points)
-        try:
-            print("[LLMAgent] Using real LLM via LangChain and OpenAI function-calling API.")
-            from langchain_openai import ChatOpenAI
-            from langchain.tools import tool
-            from langchain.agents import create_openai_functions_agent, AgentExecutor
-            from langchain.prompts import ChatPromptTemplate
-
-            # Strict tool for structured output
-            @tool
-            def collect_data_tool(entries: List[dict], new_memory_points: List[str]) -> str:
-                """You must ALWAYS use this tool to return your answer in structured form as JSON. Never reply in plain text. If you cannot answer, call the tool with empty fields."""
-                # If the LLM cannot answer, return empty fields
-                if not entries and not new_memory_points:
-                    return StrictLLMOutput(entries=[], new_memory_points=[]).model_dump_json()
-                entry_objs = [StrictDataEntry(**e) for e in entries]
-                return StrictLLMOutput(entries=entry_objs, new_memory_points=new_memory_points).model_dump_json()
-
-            llm = ChatOpenAI(model="gpt-4.1-mini", openai_api_key=api_key)
-            prompt_template = ChatPromptTemplate.from_messages([
-                ("system", "You are an AI agent assisting with data entry. You must ALWAYS use the provided tool to return your answer in structured form as JSON. Never reply in plain text. If you cannot answer, you must call the tool with empty fields."),
-                ("user", "{input}"),
-                ("system", "{agent_scratchpad}")
-            ])
-            agent = create_openai_functions_agent(llm, [collect_data_tool], prompt_template)
-            executor = AgentExecutor(agent=agent, tools=[collect_data_tool], verbose=True)
-            prompt = self.build_prompt()
-            result = executor.invoke({"input": prompt})
-            if isinstance(result, dict) and "output" in result:
-                print("Raw LLM output:", result["output"])
-                raw_output = result["output"]
-                # Extract the first JSON object from the output
-                match = re.search(r'\{.*\}', raw_output, re.DOTALL)
-                if match:
-                    json_str = match.group(0)
-                    output_data = json.loads(json_str)
-                    entries = [DataEntry(**e) for e in output_data.get("entries", [])]
-                    new_memory_points = output_data.get("new_memory_points", [])
-                    return LLMOutput(entries=entries, new_memory_points=new_memory_points)
-                else:
-                    raise ValueError("No valid JSON object found in LLM output.")
+        clarification_qas = []
+        for _ in range(self.max_clarification_rounds):
+            user_context = SystemPromptBuilder.build(self.user_memory, self.notes, {"clarification_qas": clarification_qas})
+            response = self.agent_core.handle_user_message(user_context)
+            # Check which tool was called
+            if response["type"] == "tool_call" and response["tool_details"]:
+                tool_name = response["tool_details"]["name"]
+                tool_output = response["display_message"]
+                try:
+                    output_data = json.loads(tool_output) if isinstance(tool_output, str) else tool_output
+                    if tool_name == "clarification_tool":
+                        questions = output_data.get("questions", [])
+                        if questions:
+                            print("\nClarification questions:")
+                            for i, q in enumerate(questions, 1):
+                                print(f"{i}: {q}")
+                            answers = []
+                            for i, q in enumerate(questions, 1):
+                                a = input(f"Your answer to '{q}': ")
+                                answers.append((q, a))
+                            clarification_qas.extend(answers)
+                        continue  # Next round with updated Q&A
+                    elif tool_name == "finalize_notes_tool":
+                        return OutputFormatter.format(output_data)
+                except Exception as e:
+                    print(f"[LLMAgent] Failed to parse tool output: {e}")
+                    continue
             else:
-                raise ValueError("Unexpected agent output format.")
-        except Exception as e:
-            import traceback
-            print(f"[LLMAgent] LLM call failed: {e}\n{traceback.format_exc()}\nFalling back to mock output.")
-            entries = [
-                DataEntry(field1="error", field2=0)
-            ]
-            new_memory_points = [f"LLM call failed: {e}"]
-            return LLMOutput(entries=entries, new_memory_points=new_memory_points)
+                # If not a tool call, treat as clarification request or message
+                print("LLM says:", response["display_message"])
+                user_input = input("Your answer: ")
+                clarification_qas.append((response["display_message"], user_input))
+                continue
+        # If max rounds reached, finalize with placeholders
+        print("Maximum clarification rounds reached. Finalizing with placeholders if needed.")
+        entries = [DataEntry(field1="UNDEFINED", field2=-1)]
+        new_memory_points = ["Clarification incomplete. Some fields may be undefined."]
+        return LLMOutput(entries=entries, new_memory_points=new_memory_points)
 
 if __name__ == "__main__":
-    from note_interpreter.io import load_notes_from_csv, load_user_memory_from_md
-    notes = load_notes_from_csv("docs/examples/example_notes.csv")
-    user_memory = load_user_memory_from_md("docs/examples/example_user_memory.md")
+    # Example usage
+    notes = MemoryManager.load_from_md("docs/examples/example_notes.csv")
+    user_memory = MemoryManager.load_from_md("docs/examples/example_user_memory.md")
     agent = LLMAgent(notes, user_memory)
     output = agent.run()
     print(output.model_dump_json(indent=2)) 
