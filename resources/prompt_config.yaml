@@ -41,17 +41,17 @@ sections:
     enabled: true
     comment: "Unified output schema and field meanings (from YAML)."
     params:
-      schema_file: resources/schema.yaml
+      schema_file: resources/notes_output_schema.yaml
   - name: classification
     enabled: true
     comment: "Allowed entity types and intents (from YAML). Uses the file specified in params."
     params:
-      classification_file: resources/classification.yaml
+      classification_file: resources/entity_types_and_intents.yaml
   - name: scoring_guidelines
     enabled: true
-    comment: "Note scoring/clarification triggers for evaluation."
+    comment: "Note scoring/clarification triggers for evaluation. Loaded from the schema file."
     params:
-      scoring_file: resources/scoring_metrics.yaml
+      schema_file: resources/notes_output_schema.yaml
 
   # --- Scoring, Parameters & Validation ---
   - name: parameter_explanations

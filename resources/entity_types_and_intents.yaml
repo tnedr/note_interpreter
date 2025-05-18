@@ -31,4 +31,4 @@ intents:
   - "@BUY"
   - "@WAITING"
   - "@REFLECT"
-  - "@DECIDE" 
+  - "@DECIDE"

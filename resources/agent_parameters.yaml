@@ -10,4 +10,4 @@ max_clarification_rounds:
   description: Maximum number of clarification rounds before finalizing output.
 temperature:
   value: 0.0
-  description: LLM temperature for deterministic output in tests. 
+  description: LLM temperature for deterministic output in tests.

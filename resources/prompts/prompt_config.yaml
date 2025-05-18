@@ -1,5 +1,0 @@
-  - name: scoring_guidelines
-    enabled: true
-    comment: "Note scoring/clarification triggers for evaluation. Loaded from the schema file."
-    params:
-      schema_file: resources/schemas/notes_output_schema.yaml 
