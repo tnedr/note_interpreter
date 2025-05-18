@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 import json
 from note_interpreter.agent_core import AgentCore, ToolDefinition, OpenAIToolProvider
 from langchain_openai import ChatOpenAI
+import yaml
 
 class MemoryManager:
     """Handles loading and saving long-term memory."""
@@ -17,7 +18,22 @@ class MemoryManager:
             lines = [line.strip() for line in f if line.strip() and not line.startswith('#')]
         return lines
 
+# Loader for classification YAML
+def load_classification_from_yaml(path: str) -> dict:
+    with open(path, 'r', encoding='utf-8') as f:
+        return yaml.safe_load(f)
+
 class SystemPromptBuilder:
+    @staticmethod
+    def classification_section(classification_config: dict) -> str:
+        entity_types = classification_config.get("entity_types", [])
+        intents = classification_config.get("intents", [])
+        return (
+            "## 🏷️ Allowed Classifications\n\n"
+            f"**Entity Types:** {', '.join(entity_types)}\n"
+            f"**Intents:** {', '.join(intents)}\n"
+        )
+
     @staticmethod
     def goals_section() -> str:
         return (
@@ -142,10 +158,11 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    def build(memory: List[str], notes: List[str], extra_context: Optional[dict] = None) -> str:
+    def build(memory: List[str], notes: List[str], classification_config: dict = None, extra_context: Optional[dict] = None) -> str:
         clarification_qas = extra_context.get('clarification_qas') if extra_context else None
         parts = [
             "# 🤖 System Prompt: AI Note Interpretation & Enrichment Agent\n",
+            SystemPromptBuilder.classification_section(classification_config or {}),
             SystemPromptBuilder.goals_section(),
             SystemPromptBuilder.output_schema_section(),
             SystemPromptBuilder.context_usage_section(),
@@ -189,10 +206,12 @@ class LLMAgent:
     Modular LLM agent using AgentCore for conversation and tool orchestration.
     Handles memory, prompt building, clarification loop, and structured output.
     Now uses two tools: 'clarification_tool' for clarification questions, and 'finalize_notes_tool' for final output.
+    Accepts a classification_config for allowed entity_types and intents.
     """
-    def __init__(self, notes: List[str], user_memory: List[str], max_clarification_rounds: int = 2, debug_mode: bool = False, shared_context: Optional[dict] = None):
+    def __init__(self, notes: List[str], user_memory: List[str], classification_config: dict = None, max_clarification_rounds: int = 2, debug_mode: bool = False, shared_context: Optional[dict] = None):
         self.notes = notes
         self.user_memory = user_memory
+        self.classification_config = classification_config or {}
         self.max_clarification_rounds = max_clarification_rounds
         self.debug_mode = debug_mode
         self.shared_context = shared_context or {}
@@ -204,7 +223,7 @@ class LLMAgent:
         self.agent_core = AgentCore(
             llm=self.llm,
             tools=self.tools,
-            system_prompt=SystemPromptBuilder.build(self.user_memory, self.notes),
+            system_prompt=SystemPromptBuilder.build(self.user_memory, self.notes, classification_config=self.classification_config),
             shared_context=self.shared_context,
             debug_mode=self.debug_mode
         )
