@@ -6,4 +6,5 @@ __pycache__/
 .DS_Store
 Pipfile
 Pipfile.lock
-logs/ 
+logs/
+.pytest_cache/ 
