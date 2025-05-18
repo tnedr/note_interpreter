@@ -17,4 +17,5 @@
 - Clarified the required structure for 'entries' in the system prompt and tool docstring, and added validation to skip non-dict entries in the tool function in llm_agent.py.
 - Implemented a clarification loop in llm_agent.py: the agent can ask clarification questions up to a maximum number of rounds, collects user answers, and finalizes with placeholders if the maximum is reached, following the functional specification.
 - Updated the Classification YAML in the functional specification to include all entity_types and intents from the glossary for comprehensive metadata alignment.
+- Set temperature=0.0 for all real LLM tests and the agent to ensure deterministic output, and updated both the agent and test code to support this.
 

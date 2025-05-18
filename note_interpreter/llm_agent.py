@@ -8,6 +8,7 @@ import json
 from note_interpreter.agent_core import AgentCore, ToolDefinition, OpenAIToolProvider
 from langchain_openai import ChatOpenAI
 import yaml
+import logging
 
 class MemoryManager:
     """Handles loading and saving long-term memory."""
@@ -202,20 +203,40 @@ class OutputFormatter:
         return LLMOutput(entries=entries, new_memory_points=new_memory_points)
 
 class LLMAgent:
+    _logging_initialized = False
     """
     Modular LLM agent using AgentCore for conversation and tool orchestration.
     Handles memory, prompt building, clarification loop, and structured output.
     Now uses two tools: 'clarification_tool' for clarification questions, and 'finalize_notes_tool' for final output.
     Accepts a classification_config for allowed entity_types and intents.
+    If temperature=0.0, output is deterministic (recommended for tests).
     """
-    def __init__(self, notes: List[str], user_memory: List[str], classification_config: dict = None, max_clarification_rounds: int = 2, debug_mode: bool = False, shared_context: Optional[dict] = None):
+    def __init__(self, notes: List[str], user_memory: List[str], classification_config: dict = None, max_clarification_rounds: int = 2, debug_mode: bool = False, shared_context: Optional[dict] = None, temperature: float = 0.0):
         self.notes = notes
         self.user_memory = user_memory
         self.classification_config = classification_config or {}
         self.max_clarification_rounds = max_clarification_rounds
         self.debug_mode = debug_mode
         self.shared_context = shared_context or {}
-        self.llm = ChatOpenAI(model="gpt-4.1-mini", openai_api_key=os.getenv("OPENAI_API_KEY"))
+        self.temperature = temperature
+        if self.debug_mode and not LLMAgent._logging_initialized:
+            logger = logging.getLogger()
+            logger.setLevel(logging.DEBUG)
+            # Remove all handlers (to avoid duplicate logs)
+            for handler in logger.handlers[:]:
+                logger.removeHandler(handler)
+            # Add file handler
+            file_handler = logging.FileHandler("llm_agent_debug.log", mode='w', encoding='utf-8')
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+            logger.addHandler(file_handler)
+            # Add console handler
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(logging.DEBUG)
+            console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+            logger.addHandler(console_handler)
+            LLMAgent._logging_initialized = True
+        self.llm = ChatOpenAI(model="gpt-4.1-mini", openai_api_key=os.getenv("OPENAI_API_KEY"), temperature=self.temperature)
         self.tools = [
             self._get_finalize_notes_tool(),
             self._get_clarification_tool()
@@ -282,15 +303,24 @@ class LLMAgent:
 
     def run(self) -> LLMOutput:
         clarification_qas = []
-        for _ in range(self.max_clarification_rounds):
+        for round_num in range(self.max_clarification_rounds):
             user_context = SystemPromptBuilder.build(self.user_memory, self.notes, {"clarification_qas": clarification_qas})
+            if self.debug_mode:
+                logging.debug(f"System prompt (round {round_num+1}):\n{user_context}\n")
             response = self.agent_core.handle_user_message(user_context)
+            if self.debug_mode:
+                logging.debug(f"Raw AgentCore response: {response}")
             # Check which tool was called
             if response["type"] == "tool_call" and response["tool_details"]:
                 tool_name = response["tool_details"]["name"]
                 tool_output = response["display_message"]
                 try:
-                    output_data = json.loads(tool_output) if isinstance(tool_output, str) else tool_output
+                    if (not tool_output or tool_output == "") and response["tool_details"] and "args" in response["tool_details"]:
+                        output_data = response["tool_details"]["args"]
+                    else:
+                        output_data = json.loads(tool_output) if isinstance(tool_output, str) else tool_output
+                    if self.debug_mode:
+                        logging.debug(f"Tool '{tool_name}' output: {output_data}")
                     if tool_name == "clarification_tool":
                         questions = output_data.get("questions", [])
                         if questions:
@@ -304,9 +334,12 @@ class LLMAgent:
                             clarification_qas.extend(answers)
                         continue  # Next round with updated Q&A
                     elif tool_name == "finalize_notes_tool":
-                        return OutputFormatter.format(output_data)
+                        final_output = OutputFormatter.format(output_data)
+                        if self.debug_mode:
+                            logging.debug(f"Final output: {final_output}")
+                        return final_output
                 except Exception as e:
-                    print(f"[LLMAgent] Failed to parse tool output: {e}")
+                    logging.error(f"[LLMAgent] Failed to parse tool output: {e}. Raw output: {tool_output}")
                     continue
             else:
                 # If not a tool call, treat as clarification request or message
@@ -315,10 +348,13 @@ class LLMAgent:
                 clarification_qas.append((response["display_message"], user_input))
                 continue
         # If max rounds reached, finalize with placeholders
-        print("Maximum clarification rounds reached. Finalizing with placeholders if needed.")
+        logging.warning("Maximum clarification rounds reached. Finalizing with placeholders if needed.")
         entries = [DataEntry(field1="UNDEFINED", field2=-1)]
         new_memory_points = ["Clarification incomplete. Some fields may be undefined."]
-        return LLMOutput(entries=entries, new_memory_points=new_memory_points)
+        final_output = LLMOutput(entries=entries, new_memory_points=new_memory_points)
+        if self.debug_mode:
+            logging.debug(f"Final output (fallback): {final_output}")
+        return final_output
 
 if __name__ == "__main__":
     # Example usage
