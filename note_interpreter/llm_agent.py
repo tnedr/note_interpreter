@@ -24,6 +24,18 @@ def load_classification_from_yaml(path: str) -> dict:
     with open(path, 'r', encoding='utf-8') as f:
         return yaml.safe_load(f)
 
+def load_schema_from_yaml(path: str) -> dict:
+    with open(path, 'r', encoding='utf-8') as f:
+        return yaml.safe_load(f)
+
+def load_parameters_from_yaml(path: str) -> dict:
+    with open(path, 'r', encoding='utf-8') as f:
+        return yaml.safe_load(f)
+
+def load_scoring_metrics_from_yaml(path: str) -> dict:
+    with open(path, 'r', encoding='utf-8') as f:
+        return yaml.safe_load(f)
+
 class SystemPromptBuilder:
     @staticmethod
     def classification_section(classification_config: dict) -> str:
@@ -48,19 +60,58 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
-    def output_schema_section() -> str:
+    def note_scoring_guidelines_section(scoring_metrics: dict = None, parameters: dict = None) -> str:
+        if not scoring_metrics:
+            return ""
+        section = "## 🧪 Note Scoring Guidelines\n\nEach note is internally evaluated using the following metrics (not shown in output but used for clarification logic):\n\n"
+        triggers = []
+        for metric, info in scoring_metrics.items():
+            section += f"- `{metric}` ({info.get('range','')}): {info.get('description','')}\n"
+            if 'clarification_trigger' in info:
+                if info['clarification_trigger'] == 'above':
+                    threshold = parameters.get(f"{metric}_threshold", {}).get('value', None) if parameters else None
+                    if threshold is not None:
+                        triggers.append(f"- `{metric}` > {threshold}")
+                elif info['clarification_trigger'] == 'below':
+                    threshold = parameters.get(f"{metric}_threshold", {}).get('value', None) if parameters else None
+                    if threshold is not None:
+                        triggers.append(f"- `{metric}` < {threshold}")
+        if triggers:
+            section += "\nTrigger clarification if:\n" + "\n".join(triggers) + "\n"
+        return section
+
+    @staticmethod
+    def output_schema_section(classification_config: dict = None) -> str:
+        # Use all entity types/intents from YAML
+        entity_types = classification_config.get("entity_types", []) if classification_config else []
+        intents = classification_config.get("intents", []) if classification_config else []
+        entity_types_str = ', '.join(entity_types)
+        intents_str = ', '.join(intents)
         return (
             "## 📌 Structured Output Schema\n\n"
             "Each `entry` must follow this structure:\n"
             "- `interpreted_text` (str): A full, self-contained, unambiguous sentence.\n"
-            "- `entity_type` (str): One of the allowed YAML-defined types:\n"
-            "  - `task`, `project`, `idea`, `log`, `reference`, `routine`\n"
-            "- `intent` (str): One of the allowed YAML-defined intents:\n"
-            "  - `@DO`, `@THINK`, `@PLAN`, `@REVIEW`, `@WAITING`\n"
+            f"- `entity_type` (str): One of the allowed YAML-defined types: {entity_types_str}\n"
+            f"- `intent` (str): One of the allowed YAML-defined intents: {intents_str}\n"
             "- `clarity_score` (int): 0–100, estimated clarity of the interpreted output\n\n"
+            "Use only entity_type and intent values defined in the YAML file unless clearly missing. Mark missing ones with MISSING_suggested:.\n"
             "⚠️ If `entity_type` or `intent` fall outside the YAML list, flag them using this format:\n"
             "- `MISSING_suggested:goal` or `MISSING_suggested:@DEFINE`\n"
         )
+
+    @staticmethod
+    def output_field_meanings_section(schema: dict) -> str:
+        section = "## 📝 Output Field Meanings\n\n"
+        for field, info in schema.get('DataEntry', {}).items():
+            section += f"- `{field}` ({info['type']}): {info['description']}\n"
+        return section
+
+    @staticmethod
+    def parameter_explanations_section(parameters: dict) -> str:
+        section = "## ⚙️ Agent Parameters\n\n"
+        for param, info in parameters.items():
+            section += f"- `{param}` = {info['value']} ({info['description']})\n"
+        return section
 
     @staticmethod
     def tool_json_schema_section() -> str:
@@ -89,6 +140,27 @@ class SystemPromptBuilder:
         return (
             "## 🛠️ Tool JSON Schema (for finalize_notes_tool)\n\n"
             "```json\n" + json.dumps(schema, indent=2) + "\n```\n"
+        )
+
+    @staticmethod
+    def output_validation_rules_section() -> str:
+        return (
+            "## 🔒 Output Validation Rules (Mandatory)\n\n"
+            "- You MUST return a valid JSON object calling `finalize_notes_tool`.\n"
+            "- You MUST include all three fields: `entries`, `new_memory_points`, and `clarification_questions`.\n"
+            "- Even if empty, provide an empty list (`[]`) for any missing category.\n"
+            "- Never return plain text or unstructured answers.\n"
+        )
+
+    @staticmethod
+    def tool_behavior_summary_section() -> str:
+        return (
+            "## 🛠️ Tool Behavior Summary\n\n"
+            "- `finalize_notes_tool(...)` is the only valid way to output results.\n"
+            "- It accepts three parameters:\n"
+            "  - `entries`: your main result\n"
+            "  - `new_memory_points`: context insights\n"
+            "  - `clarification_questions`: if you need help\n"
         )
 
     @staticmethod
@@ -139,6 +211,15 @@ class SystemPromptBuilder:
         )
 
     @staticmethod
+    def memory_point_examples_section() -> str:
+        return (
+            "## 📘 Memory Point Examples\n\n"
+            "* Tamas is currently working on a Q3 marketing launch plan and often refers to it simply as 'plan.'\n"
+            "* Tamas prefers to phrase actionable notes starting with verbs like 'continue,' 'email,' or 'draft.'\n"
+            "* Tamas uses the term 'LifeOS' to refer to his integrated personal operating system project.\n"
+        )
+
+    @staticmethod
     def example_output_section() -> str:
         return (
             "## 🧮 Example Entry Output (JSON)\n\n"
@@ -185,21 +266,30 @@ class SystemPromptBuilder:
             "## 🛑 Finalization Protocol\n\n"
             "- After providing the final structured output, do not ask further questions. The conversation is finished.\n"
             "- Never respond in plain text at any stage.\n"
+            "- If no clear interpretation is possible after all clarification rounds:\n"
+            "  - Use `\"UNDEFINED\"` for any field that cannot be confidently determined.\n"
+            "  - Still call the `finalize_notes_tool` with all fields included.\n"
         )
 
     @staticmethod
-    def build(memory: List[str], notes: List[str], classification_config: dict = None, extra_context: Optional[dict] = None) -> str:
+    def build(memory: List[str], notes: List[str], classification_config: dict = None, extra_context: Optional[dict] = None, schema: dict = None, parameters: dict = None, scoring_metrics: dict = None) -> str:
         clarification_qas = extra_context.get('clarification_qas') if extra_context else None
         parts = [
             "# 🤖 System Prompt: AI Note Interpretation & Enrichment Agent\n",
             "You are an AI assistant that helps users interpret, clarify, and enrich their personal notes for life management, project tracking, and self-improvement. Your job is to turn ambiguous, shorthand, or incomplete notes into clear, actionable, and structured data, asking for clarification if needed, and updating long-term memory with new insights.\n",
             SystemPromptBuilder.classification_section(classification_config or {}),
             SystemPromptBuilder.goals_section(),
-            SystemPromptBuilder.output_schema_section(),
+            SystemPromptBuilder.note_scoring_guidelines_section(scoring_metrics, parameters),
+            SystemPromptBuilder.output_schema_section(classification_config),
+            SystemPromptBuilder.output_field_meanings_section(schema or {}),
             SystemPromptBuilder.tool_json_schema_section(),
+            SystemPromptBuilder.parameter_explanations_section(parameters or {}),
+            SystemPromptBuilder.output_validation_rules_section(),
+            SystemPromptBuilder.tool_behavior_summary_section(),
             SystemPromptBuilder.context_usage_section(),
             SystemPromptBuilder.clarification_protocol_section(),
             SystemPromptBuilder.memory_update_section(),
+            SystemPromptBuilder.memory_point_examples_section(),
             SystemPromptBuilder.example_output_section(),
             SystemPromptBuilder.input_context_section(memory, notes, clarification_qas),
             SystemPromptBuilder.finalization_protocol_section()
@@ -235,21 +325,36 @@ class OutputFormatter:
 
 class LLMAgent:
     _logging_initialized = False
+    _schema = None
+    _parameters = None
+    _scoring_metrics = None
     """
     Modular LLM agent using AgentCore for conversation and tool orchestration.
     Handles memory, prompt building, clarification loop, and structured output.
     Now uses two tools: 'clarification_tool' for clarification questions, and 'finalize_notes_tool' for final output.
     Accepts a classification_config for allowed entity_types and intents.
     If temperature=0.0, output is deterministic (recommended for tests).
+    Loads output schema, agent parameters, and scoring metrics from YAML for consistency.
     """
-    def __init__(self, notes: List[str], user_memory: List[str], classification_config: dict = None, max_clarification_rounds: int = 2, debug_mode: bool = False, shared_context: Optional[dict] = None, temperature: float = 0.0):
+    def __init__(self, notes: List[str], user_memory: List[str], classification_config: dict = None, max_clarification_rounds: int = None, debug_mode: bool = False, shared_context: Optional[dict] = None, temperature: float = None):
         self.notes = notes
         self.user_memory = user_memory
         self.classification_config = classification_config or {}
-        self.max_clarification_rounds = max_clarification_rounds
+        # Load schema, parameters, and scoring metrics if not already loaded
+        if not LLMAgent._schema:
+            LLMAgent._schema = load_schema_from_yaml("resources/schema.yaml")
+        if not LLMAgent._parameters:
+            LLMAgent._parameters = load_parameters_from_yaml("resources/parameters.yaml")
+        if not LLMAgent._scoring_metrics:
+            LLMAgent._scoring_metrics = load_scoring_metrics_from_yaml("resources/scoring_metrics.yaml")
+        self.schema = LLMAgent._schema
+        self.parameters = LLMAgent._parameters
+        self.scoring_metrics = LLMAgent._scoring_metrics
+        # Use parameters for agent config
+        self.max_clarification_rounds = max_clarification_rounds if max_clarification_rounds is not None else self.parameters['max_clarification_rounds']['value']
         self.debug_mode = debug_mode
         self.shared_context = shared_context or {}
-        self.temperature = temperature
+        self.temperature = temperature if temperature is not None else self.parameters['temperature']['value']
         if self.debug_mode and not LLMAgent._logging_initialized:
             logger = logging.getLogger()
             logger.setLevel(logging.DEBUG)
@@ -275,7 +380,14 @@ class LLMAgent:
         self.agent_core = AgentCore(
             llm=self.llm,
             tools=self.tools,
-            system_prompt=SystemPromptBuilder.build(self.user_memory, self.notes, classification_config=self.classification_config),
+            system_prompt=SystemPromptBuilder.build(
+                self.user_memory,
+                self.notes,
+                classification_config=self.classification_config,
+                schema=self.schema,
+                parameters=self.parameters,
+                scoring_metrics=self.scoring_metrics
+            ),
             shared_context=self.shared_context,
             debug_mode=self.debug_mode
         )
@@ -335,7 +447,15 @@ class LLMAgent:
     def run(self) -> LLMOutput:
         clarification_qas = []
         for round_num in range(self.max_clarification_rounds):
-            user_context = SystemPromptBuilder.build(self.user_memory, self.notes, {"clarification_qas": clarification_qas})
+            user_context = SystemPromptBuilder.build(
+                self.user_memory,
+                self.notes,
+                classification_config=self.classification_config,
+                extra_context={"clarification_qas": clarification_qas},
+                schema=self.schema,
+                parameters=self.parameters,
+                scoring_metrics=self.scoring_metrics
+            )
             if self.debug_mode:
                 logging.debug(f"System prompt (round {round_num+1}):\n{user_context}\n")
             response = self.agent_core.handle_user_message(user_context)

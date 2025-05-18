@@ -1,0 +1,27 @@
+# Output schema for the note interpreter agent
+DataEntry:
+  interpreted_text:
+    type: string
+    description: A full, self-contained, unambiguous sentence.
+  entity_type:
+    type: string
+    description: Entity type, e.g., task, project, idea, etc.
+  intent:
+    type: string
+    description: Intent, e.g., @DO, @PLAN, etc.
+  clarity_score:
+    type: integer
+    description: Clarity score (0-100) of the interpreted output.
+LLMOutput:
+  entries:
+    type: array
+    items: DataEntry
+    description: List of structured data entries for each note.
+  new_memory_points:
+    type: array
+    items: string
+    description: New bullet points to append to the Markdown memory.
+  clarification_questions:
+    type: array
+    items: string
+    description: Clarification questions to ask the user if needed. 

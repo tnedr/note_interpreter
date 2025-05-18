@@ -1,5 +1,5 @@
 import pytest
-from note_interpreter.llm_agent import LLMAgent, LLMOutput, DataEntry, SystemPromptBuilder, load_classification_from_yaml
+from note_interpreter.llm_agent import LLMAgent, LLMOutput, DataEntry, SystemPromptBuilder, load_classification_from_yaml, OpenAIToolProvider
 from note_interpreter.io import load_notes_from_csv, load_user_memory_from_md
 import tempfile
 import os
@@ -36,9 +36,11 @@ def test_mock_output_no_api_key(monkeypatch):
             return {
                 "type": "tool_call",
                 "tool_details": {"name": "finalize_notes_tool"},
-                "display_message": '{"entries": [{"field1": "example1", "field2": 1}], "new_memory_points": [], "clarification_questions": []}'
+                "display_message": '{"entries": [{"interpreted_text": "example1", "entity_type": "task", "intent": "@DO", "clarity_score": 100}], "new_memory_points": [], "clarification_questions": []}'
             }
     monkeypatch.setattr("note_interpreter.llm_agent.ChatOpenAI", lambda *a, **kw: DummyLLM())
+    # Patch tool provider logic for DummyLLM
+    monkeypatch.setattr("note_interpreter.llm_agent.LLMAgent._get_default_tool_provider", lambda self: OpenAIToolProvider())
     agent = LLMAgent(notes=["test"], user_memory=["* memory"])
     output = agent.run()
     assert isinstance(output, LLMOutput)
@@ -212,7 +214,7 @@ def test_tool_invocation_sequence_and_args(monkeypatch):
                 return {
                     "type": "tool_call",
                     "tool_details": {"name": "finalize_notes_tool"},
-                    "display_message": '{"entries": [{"field1": "clarified stuff", "field2": 1}], "new_memory_points": ["* clarified stuff"], "clarification_questions": []}'
+                    "display_message": '{"entries": [{"interpreted_text": "clarified stuff", "entity_type": "task", "intent": "@DO", "clarity_score": 100}], "new_memory_points": ["* clarified stuff"], "clarification_questions": []}'
                 }
     agent = LLMAgent(notes=["unclear stuff"], user_memory=["* memory"], classification_config={'entity_types': ['task'], 'intents': ['@DO']})
     dummy_core = DummyAgentCore()

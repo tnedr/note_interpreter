@@ -1,0 +1,13 @@
+# Agent parameters for note interpreter
+confidence_threshold:
+  value: 70
+  description: Minimum confidence score required to avoid clarification (0-100).
+ambiguity_threshold:
+  value: 60
+  description: Maximum ambiguity score allowed before clarification is triggered (0-100).
+max_clarification_rounds:
+  value: 2
+  description: Maximum number of clarification rounds before finalizing output.
+temperature:
+  value: 0.0
+  description: LLM temperature for deterministic output in tests. 
