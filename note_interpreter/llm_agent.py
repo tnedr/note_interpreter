@@ -172,7 +172,7 @@ class SystemPromptBuilder:
         Unified output schema and field meanings, loaded from YAML.
         params['schema_file'] should specify the YAML file.
         """
-        schema_file = params.get('schema_file', 'resources/schema.yaml')
+        schema_file = params.get('schema_file', 'resources/notes_output_schema.yaml')
         import yaml as _yaml
         with open(schema_file, 'r', encoding='utf-8') as f:
             schema = _yaml.safe_load(f)
@@ -406,9 +406,9 @@ class LLMAgent:
         self.classification_config = classification_config or {}
         # Load schema, parameters, and scoring metrics if not already loaded
         if not LLMAgent._schema:
-            LLMAgent._schema = load_schema_from_yaml("resources/schema.yaml")
+            LLMAgent._schema = load_schema_from_yaml("resources/notes_output_schema.yaml")
         if not LLMAgent._parameters:
-            LLMAgent._parameters = load_parameters_from_yaml("resources/parameters.yaml")
+            LLMAgent._parameters = load_parameters_from_yaml("resources/agent_parameters.yaml")
         if not LLMAgent._scoring_metrics:
             LLMAgent._scoring_metrics = load_scoring_metrics_from_yaml("resources/scoring_metrics.yaml")
         self.schema = LLMAgent._schema

@@ -13,7 +13,7 @@ def get_real_test_data():
         "Tamas is working on a project called LifeOS, which would like him to manage his life, tasks, ideas, projects, self realization etc. So it covers the life.",
         "Tamas is interested in psychology and spirituality."
     ]
-    classification_config = load_classification_from_yaml("resources/classification.yaml")
+    classification_config = load_classification_from_yaml("resources/entity_types_and_intents.yaml")
     return notes, memory, classification_config
 
 def is_fallback_output(output):
@@ -60,7 +60,7 @@ def test_agent_real_llm_clarification():
         pytest.skip("No API key for real LLM test.")
     notes = ["continue plan"]
     memory = ["* Tamas is working on a project called LifeOS."]
-    classification_config = load_classification_from_yaml("resources/classification.yaml")
+    classification_config = load_classification_from_yaml("resources/entity_types_and_intents.yaml")
     agent = LLMAgent(notes, memory, classification_config=classification_config, temperature=0.0, debug_mode=True)
     output = agent.run()
     print("\n--- REAL LLM CLARIFICATION OUTPUT ---\n")
@@ -90,7 +90,7 @@ def test_agent_real_llm_multiple_notes():
         "call John about the project"
     ]
     memory = ["* Tamas is working on a project called LifeOS."]
-    classification_config = load_classification_from_yaml("resources/classification.yaml")
+    classification_config = load_classification_from_yaml("resources/entity_types_and_intents.yaml")
     agent = LLMAgent(notes, memory, classification_config=classification_config, temperature=0.0, debug_mode=True)
     output = agent.run()
     print("\n--- REAL LLM MULTIPLE NOTES OUTPUT ---\n")
@@ -116,7 +116,7 @@ def test_agent_real_llm_edge_case_empty():
         pytest.skip("No API key for real LLM test.")
     notes = []
     memory = []
-    classification_config = load_classification_from_yaml("resources/classification.yaml")
+    classification_config = load_classification_from_yaml("resources/entity_types_and_intents.yaml")
     agent = LLMAgent(notes, memory, classification_config=classification_config, temperature=0.0, debug_mode=True)
     output = agent.run()
     print("\n--- REAL LLM EDGE CASE EMPTY OUTPUT ---\n")

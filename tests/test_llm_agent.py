@@ -64,7 +64,7 @@ def test_system_prompt_builder_modular():
         ("What kind of milk?", "Almond"),
         ("What time for the meeting?", "10am")
     ]
-    classification_config = load_classification_from_yaml("resources/classification.yaml")
+    classification_config = load_classification_from_yaml("resources/entity_types_and_intents.yaml")
     prompt = SystemPromptBuilder.build(memory, notes, classification_config=classification_config, extra_context={"clarification_qas": clarification_qas})
     print("\n--- SYSTEM PROMPT FOR AI REVIEW ---\n")
     print(prompt)
@@ -92,7 +92,7 @@ def test_realistic_notes_prompt():
         "Tamas is working on a project called LifeOS, which would like him to manage his life, tasks, ideas, projects, self realization etc. So it covers the life.",
         "Tamas is interested in psychology and spirituality."
     ]
-    classification_config = load_classification_from_yaml("resources/classification.yaml")
+    classification_config = load_classification_from_yaml("resources/entity_types_and_intents.yaml")
     prompt = SystemPromptBuilder.build(memory, notes, classification_config=classification_config)
     print("\n--- SYSTEM PROMPT WITH REALISTIC NOTES ---\n")
     print(prompt)
