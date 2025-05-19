@@ -10,11 +10,9 @@ from note_interpreter.log import Log, log
 @pytest.fixture(autouse=True)
 def reset_log_singleton():
     # Reset singleton for each test
-    Log._instance = None
-    Log._initialized = False
+    log.reset()
     yield
-    Log._instance = None
-    Log._initialized = False
+    log.reset()
 
 def test_pytest_runs():
     assert True
@@ -78,4 +76,12 @@ def test_log_level_filtering(capsys):
     l.debug("debug not shown")
     out, err = capsys.readouterr()
     assert "info ok" in out
-    assert "debug not shown" not in out 
+    assert "debug not shown" not in out
+
+def test_log_color_demo():
+    """Demonstrate all log levels and their colors for visual inspection."""
+    log.debug("This is a DEBUG message (should be cyan)")
+    log.info("This is an INFO message (should be green)")
+    log.warning("This is a WARNING message (should be yellow)")
+    log.error("This is an ERROR message (should be red)")
+    log.print("This is a PRINT message (should be default terminal color)") 

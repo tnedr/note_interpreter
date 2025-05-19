@@ -69,5 +69,11 @@ class Log:
     def print(self, msg):
         print(msg)
 
+    def reset(self):
+        for handler in self.logger.handlers[:]:
+            self.logger.removeHandler(handler)
+        Log._initialized = False
+        Log._instance = None
+
 # Singleton instance for easy import
 log = Log() 

@@ -35,4 +35,8 @@
 - Updated resources/schema.yaml to contain both type and description for each field.
 - Updated SystemPromptBuilder and prompt_config.yaml to use the new unified section, making schema and field docs fully data-driven.
 - Added stricter, correctness-based real LLM tests, improved output printing, and a guide for interactive clarification feedback in tests/test_llm_agent_real.py.
+- Megbeszéltük a Python csomagolás, fejlesztői telepítés és projektstruktúra előnyeit, és létrehoztuk a setup.py-t a note_interpreter csomaghoz.
+- Átbeszéltük a docs mappa szerepét, és hogy mi kerül a csomagba, mi nem.
+- Elmagyaráztuk a sys.path trükk és a csomagolás közötti különbséget, és hogy mikor melyik ajánlott.
+- Most projekt-áttekintés és következő lépések egyeztetése következik.
 
