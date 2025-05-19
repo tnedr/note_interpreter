@@ -1,5 +1,22 @@
+"""
+How to try the agent interactively (for clarification feedback):
+-------------------------------------------------------------
+You can run the agent in interactive mode to see and provide feedback during clarification rounds.
+Example:
+
+    from note_interpreter.llm_agent import LLMAgent, load_classification_from_yaml
+    notes = ["continue plan"]
+    memory = ["* Tamas is working on a project called LifeOS."]
+    classification_config = load_classification_from_yaml("resources/entity_types_and_intents.yaml")
+    agent = LLMAgent(notes, memory, classification_config=classification_config, temperature=0.0, debug_mode=True)
+    output = agent.run()  # When clarification is needed, you'll be prompted for input in the terminal.
+    print(output)
+
+-------------------------------------------------------------
+"""
 import pytest
 import os
+import json
 from note_interpreter.llm_agent import LLMAgent, LLMOutput, load_classification_from_yaml
 
 def get_real_test_data():
@@ -26,6 +43,15 @@ def is_fallback_output(output):
             return True
     return False
 
+def pretty_print_output(output):
+    try:
+        if hasattr(output, "model_dump_json"):
+            print(json.dumps(json.loads(output.model_dump_json()), indent=2, ensure_ascii=False))
+        else:
+            print(output)
+    except Exception:
+        print(output)
+
 @pytest.mark.llm
 def test_agent_real_llm():
     """
@@ -38,7 +64,7 @@ def test_agent_real_llm():
     agent = LLMAgent(notes, memory, classification_config=classification_config, temperature=0.0, debug_mode=True)
     output = agent.run()
     print("\n--- REAL LLM OUTPUT ---\n")
-    print(output)
+    pretty_print_output(output)
     print("\n--- END REAL LLM OUTPUT ---\n")
     assert isinstance(output, LLMOutput)
     assert hasattr(output, 'entries')
@@ -49,6 +75,12 @@ def test_agent_real_llm():
         assert hasattr(entry, 'entity_type')
         assert hasattr(entry, 'intent')
         assert hasattr(entry, 'clarity_score')
+        # Stricter: interpreted_text should not be empty or generic
+        assert entry.interpreted_text and entry.interpreted_text != "UNDEFINED"
+        assert entry.entity_type and entry.entity_type != "UNDEFINED"
+        assert entry.intent and entry.intent != "UNDEFINED"
+        assert isinstance(entry.clarity_score, int)
+        assert 0 <= entry.clarity_score <= 100
 
 @pytest.mark.llm
 def test_agent_real_llm_clarification():
@@ -64,7 +96,7 @@ def test_agent_real_llm_clarification():
     agent = LLMAgent(notes, memory, classification_config=classification_config, temperature=0.0, debug_mode=True)
     output = agent.run()
     print("\n--- REAL LLM CLARIFICATION OUTPUT ---\n")
-    print(output)
+    pretty_print_output(output)
     print("\n--- END REAL LLM CLARIFICATION OUTPUT ---\n")
     assert isinstance(output, LLMOutput)
     assert hasattr(output, 'entries')
@@ -75,6 +107,11 @@ def test_agent_real_llm_clarification():
         assert hasattr(entry, 'entity_type')
         assert hasattr(entry, 'intent')
         assert hasattr(entry, 'clarity_score')
+        assert entry.interpreted_text and entry.interpreted_text != "UNDEFINED"
+        assert entry.entity_type and entry.entity_type != "UNDEFINED"
+        assert entry.intent and entry.intent != "UNDEFINED"
+        assert isinstance(entry.clarity_score, int)
+        assert 0 <= entry.clarity_score <= 100
 
 @pytest.mark.llm
 def test_agent_real_llm_multiple_notes():
@@ -94,7 +131,7 @@ def test_agent_real_llm_multiple_notes():
     agent = LLMAgent(notes, memory, classification_config=classification_config, temperature=0.0, debug_mode=True)
     output = agent.run()
     print("\n--- REAL LLM MULTIPLE NOTES OUTPUT ---\n")
-    print(output)
+    pretty_print_output(output)
     print("\n--- END REAL LLM MULTIPLE NOTES OUTPUT ---\n")
     assert isinstance(output, LLMOutput)
     assert hasattr(output, 'entries')
@@ -105,6 +142,11 @@ def test_agent_real_llm_multiple_notes():
         assert hasattr(entry, 'entity_type')
         assert hasattr(entry, 'intent')
         assert hasattr(entry, 'clarity_score')
+        assert entry.interpreted_text and entry.interpreted_text != "UNDEFINED"
+        assert entry.entity_type and entry.entity_type != "UNDEFINED"
+        assert entry.intent and entry.intent != "UNDEFINED"
+        assert isinstance(entry.clarity_score, int)
+        assert 0 <= entry.clarity_score <= 100
 
 @pytest.mark.llm
 def test_agent_real_llm_edge_case_empty():
@@ -120,7 +162,29 @@ def test_agent_real_llm_edge_case_empty():
     agent = LLMAgent(notes, memory, classification_config=classification_config, temperature=0.0, debug_mode=True)
     output = agent.run()
     print("\n--- REAL LLM EDGE CASE EMPTY OUTPUT ---\n")
-    print(output)
+    pretty_print_output(output)
     print("\n--- END REAL LLM EDGE CASE EMPTY OUTPUT ---\n")
     assert isinstance(output, LLMOutput)
-    assert not is_fallback_output(output), f"Agent returned fallback/placeholder output: {output}" 
+    assert not is_fallback_output(output), f"Agent returned fallback/placeholder output: {output}"
+    # If entries exist, check they are not fallback
+    for entry in output.entries:
+        assert entry.interpreted_text != "UNDEFINED"
+        assert entry.entity_type != "UNDEFINED"
+        assert entry.intent != "UNDEFINED"
+
+
+def test_interactive_clarification_demo():
+    """
+    DEMO: Run the agent interactively to see/try the clarification loop.
+    This is not a real test (does not assert), but lets you see the clarification process.
+    To use: uncomment and run manually.
+    """
+    # Uncomment to try interactively:
+    # notes = ["continue plan"]
+    # memory = ["* Tamas is working on a project called LifeOS."]
+    # classification_config = load_classification_from_yaml("resources/entity_types_and_intents.yaml")
+    # agent = LLMAgent(notes, memory, classification_config=classification_config, temperature=0.0, debug_mode=True)
+    # output = agent.run()  # You will be prompted for clarification if needed
+    # print("\n--- INTERACTIVE OUTPUT ---\n")
+    # pretty_print_output(output)
+    # print("\n--- END INTERACTIVE OUTPUT ---\n") 
