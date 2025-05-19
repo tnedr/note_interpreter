@@ -1,6 +1,3 @@
-
-
-
 # megerteni a custom toolt es a @tool t
 # https://python.langchain.com/v0.1/docs/modules/tools/custom_tools/
 
@@ -266,17 +263,21 @@ class MessageType:
     ERROR = "error"
 
 class AgentCore(Generic[StateType, ResponseType]):
-    """Core agent implementation with interactive capabilities"""
+    """
+    Core agent implementation with interactive capabilities.
+    :param logger: Logger instance to use for logging (default: standard logging.getLogger(__name__))
+    """
     def __init__(
         self,
         llm: BaseChatModel,
-        tools: List[ToolDefinition],
+        tools: List['ToolDefinition'],
         system_prompt: str,
         shared_context: Optional[Dict[str, Any]] = None,
         context_usage: Optional[Dict[str, List[str]]] = None,
-        tool_provider: Optional[ToolProvider] = None, #todo delete this, llm bol kitalalja
+        tool_provider: Optional['ToolProvider'] = None, #todo delete this, llm bol kitalalja
         should_initiate: bool = True,
-        debug_mode: bool = False
+        debug_mode: bool = False,
+        logger=None
     ):
         self.debug_mode = debug_mode
         self.llm = llm
@@ -285,10 +286,13 @@ class AgentCore(Generic[StateType, ResponseType]):
         self.context_usage = context_usage or {}
         
         # Prompt injection ha van shared context és usage konfig
-        if shared_context and context_usage.get('inject_to_system_prompt'):
+        if shared_context and context_usage and context_usage.get('inject_to_system_prompt'):
             system_prompt = self._inject_prompt_variables(system_prompt)
             if self.debug_mode:
-                print(f"\n[DEBUG] System prompt after injection: {system_prompt}")
+                if logger:
+                    logger.debug(f"\n[DEBUG] System prompt after injection: {system_prompt}")
+                else:
+                    print(f"\n[DEBUG] System prompt after injection: {system_prompt}")
         
         self.system_prompt = system_prompt
         
@@ -296,7 +300,7 @@ class AgentCore(Generic[StateType, ResponseType]):
         self.tool_provider = tool_provider or self._get_default_tool_provider()
         self.bound_llm = self.tool_provider.bind_tools(self.llm, tools) if tools else self.llm
         
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger or logging.getLogger(__name__)
         
         # State inicializálás
         self.state = AgentState()
