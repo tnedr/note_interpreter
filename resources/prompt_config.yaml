@@ -22,8 +22,8 @@
 #   - custom_section: (Optional) Any custom text you want
 #
 # Tools available to the agent:
-#   - clarification_tool: Used to ask the user clarification questions if the agent is uncertain.
-#   - finalize_notes_tool: Used to return the final, structured, enriched output (entries, new_memory_points, clarification_questions).
+#   - ask_user: Used to ask the user clarification questions if the agent is uncertain.
+#   - finalize_notes: Used to return the final, structured, enriched output (entries, new_memory_points, ask_user_questions).
 #
 # This comment is for human readers only and is not used by the code.
 

@@ -23,8 +23,9 @@ class NoteBatch(BaseModel):
 class DataEntry(BaseModel):
     """
     Represents a single structured data entry returned by the LLM agent.
-    Fields match the output schema: interpreted_text, entity_type, intent, clarity_score.
+    Fields match the output schema: raw_text, interpreted_text, entity_type, intent, clarity_score.
     """
+    raw_text: str = Field(..., description="The original note text from the user.")
     interpreted_text: str = Field(..., description="A full, self-contained, unambiguous sentence.")
     entity_type: str = Field(..., description="Entity type, e.g., task, project, idea, etc.")
     intent: str = Field(..., description="Intent, e.g., @DO, @PLAN, etc.")
@@ -32,7 +33,9 @@ class DataEntry(BaseModel):
 
 class LLMOutput(BaseModel):
     """
-    Represents the structured output from the LLM agent, including new memory points.
+    Represents the structured output from the LLM agent, including new memory points and tool call log.
     """
     entries: List[DataEntry]
-    new_memory_points: List[str] = Field(default_factory=list, description="New bullet points to append to the Markdown memory.") 
+    new_memory_points: List[str] = Field(default_factory=list, description="New bullet points to append to the Markdown memory.")
+    ask_user_questions: List[str] = Field(default_factory=list, description="Questions to ask the user for clarification.")
+    tool_calls: List[dict] = Field(default_factory=list, description="List of tool calls made during the run.") 

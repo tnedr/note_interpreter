@@ -24,6 +24,7 @@
 - Updated real LLM tests to assert that fallback output is not returned, with clear error messages.
 - Ensured temperature=0.0 is always set for deterministic output in real LLM tests.
 - Improved debug logging for tool outputs and fallback cases in the agent.
+- Fixed a TypeError in llm_agent.py by updating the log.debug call to use a single string argument for section order logging.
 - now 2024-06-09
 - Implemented a config-driven, registry-based prompt builder (SystemPromptBuilder) that builds prompts from a YAML config file.
 - Each prompt section is now a registry function, and the prompt structure/content is fully controlled by config.
@@ -39,4 +40,10 @@
 - Átbeszéltük a docs mappa szerepét, és hogy mi kerül a csomagba, mi nem.
 - Elmagyaráztuk a sys.path trükk és a csomagolás közötti különbséget, és hogy mikor melyik ajánlott.
 - Most projekt-áttekintés és következő lépések egyeztetése következik.
+- Updated docs/examples/example_notes.csv to contain more realistic, user-like notes for a more lifelike demo experience.
+- Updated the system to always include raw_text in each entry of the LLM output, updating the schema, prompt, and output formatter accordingly.
+- Added logging and output of tool call history: tool invocations are now printed, logged, and included in the LLM output JSON for full traceability.
+- Finomítottam a promptot, hogy az agent mindig kérjen pontosítást, ha a tool használat nem egyértelmű, és létrehoztam egy ToolOnlyAgentCore osztályt, amely csak tool használatot engedélyez.
+- now 2024-06-13
+- Átneveztem a toolokat (clarification_tool -> ask_user, finalize_notes_tool -> finalize_notes), a promptot és a példát is ehhez igazítottam, és készítettem egy demót, ahol az agentnek biztosan az ask_user toolt kell használnia.
 
