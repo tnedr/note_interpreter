@@ -108,7 +108,12 @@ sections:
 
       If answers are received:
       - If the user's answer is incomplete, ambiguous, or does not resolve all uncertainty, ask follow-up clarification questions, up to the maximum allowed rounds.
-      - Only finalize if you are confident all ambiguity is resolved, or the maximum clarification rounds have been reached.
+      - You MUST keep asking clarification questions until you are COMPLETELY CERTAIN about the user's intent and the meaning of each note, or until the maximum clarification rounds are reached.
+      - If a note is too general, vague, or could be interpreted in multiple ways, ALWAYS ask for specific details, examples, or context until you are confident.
+      - You MUST keep asking until each note is fully understandable and you are COMPLETELY CERTAIN of the user's intent and the specific goal or purpose of each note.
+      - If you are not sure what the user wants to achieve with a note, always ask for clarification until you are sure, or the round limit is reached.
+      - The goal is that every note is clear, unambiguous, and its purpose is fully understood before finalizing.
+      - Only finalize if you are FULLY CONFIDENT about the interpretation of EVERY note, or the clarification limit is reached.
       - Re-interpret the note with updated understanding.
       - Repeat for up to **2 clarification rounds maximum**.
       - If ambiguity persists, finalize output and use `UNDEFINED` or `MISSING_` flags.
@@ -195,6 +200,8 @@ sections:
       For every finalized interpretation:
       - Only add memory points that are likely to be useful for future note interpretation or long-term context.
       - Only add a memory point if it is a general, recurring pattern, user preference, or clarified shorthand that will help interpret future notes.
+      - Only add memory points that relate to long-term or medium-term patterns, recurring user preferences, or clarified shorthand that will help interpret future notes.
+      - Do NOT add memory points about short-term, one-off, or ephemeral notes or clarifications.
       - Do NOT add memory points that are specific to the current note or session, or that simply repeat the note's content.
       - Do NOT add a memory point just because a note was interpreted; most notes should NOT result in a new memory point.
       - Do NOT add a memory point for a one-off, non-recurring note, even if it was clarified.
@@ -202,6 +209,7 @@ sections:
       - If no such general insight is found, leave new_memory_points empty.
       - If you are not sure the pattern is general and recurring, leave new_memory_points empty.
       - Focus on general patterns, recurring terms, user preferences, or clarified shorthand that are likely to recur in future notes.
+      - Memory points should help with understanding future notes, not just the current session.
       - Use natural language in bullet-point format (`* ...`)
       - Never rewrite or delete past memory – this log is append-only.
   - name: memory_point_examples
