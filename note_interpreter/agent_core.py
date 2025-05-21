@@ -555,3 +555,31 @@ class AgentCore(Generic[StateType, ResponseType]):
             if self.debug_mode:
                 self.logger.debug(f"[DEBUG] Error formatting prompt: {e}")
             return prompt
+
+    def invoke_with_message_list(self, messages: List[Dict]) -> Dict:
+        """
+        Stateless, zero-shot LLM invocation: does NOT append to internal conversation history.
+        Directly invokes the LLM with the provided messages list and returns the structured response.
+        """
+        try:
+            # Log the messages being sent
+            if self.debug_mode:
+                self.logger.debug("[DEBUG] Zero-shot messages sent to LLM:\n" + json.dumps(messages, indent=2, ensure_ascii=False))
+            llm_response = self.bound_llm.invoke(messages)
+            response_data = self._extract_llm_response(llm_response)
+            return {
+                "type": MessageType.TOOL_CALL if response_data['tool_used'] else MessageType.CONVERSATION,
+                "display_message": response_data['message'],
+                "tool_details": {
+                    "name": response_data['tool_name'],
+                    "args": response_data['tool_args']
+                } if response_data['tool_used'] else None
+            }
+        except Exception as e:
+            error_msg = f"Error processing message: {str(e)}"
+            self.logger.error(error_msg)
+            return {
+                "type": MessageType.ERROR,
+                "display_message": f"An error occurred: {str(e)}",
+                "error_details": error_msg
+            }

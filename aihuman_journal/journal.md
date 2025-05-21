@@ -52,4 +52,5 @@
 - Added visible section headers (e.g., '------------ IDENTITY / ROLE ------------') to the prompt config for human clarity, following canonical prompt design guidelines.
 - Modified SystemPromptBuilder so that every major section in the generated prompt is now preceded by a visible visual separator line (e.g., '------------ SECTION NAME ------------') for human clarity, matching the config structure.
 - Grouped OUTPUT SCHEMA & CLASSIFICATION, SCORING & CLARIFICATION GUIDELINES, and PARAMETERS & VALIDATION as subsections under a new main section 'OPERATIONAL PROTOCOL' in the prompt config and updated the prompt builder so these all appear under a single visual separator in the generated prompt.
+- Updated the prompt config and SystemPromptBuilder to fully match the canonical prompt design guidelines, adding explicit sections for COMMUNICATION STRATEGY, CONSTRAINTS, REASONING STYLE / HEURISTICS, and META BEHAVIOR / FALLBACK, with visible separators and correct order.
 

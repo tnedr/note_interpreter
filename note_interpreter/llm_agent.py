@@ -54,6 +54,10 @@ class SystemPromptBuilder:
         'output_validation_rules': 'OPERATIONAL PROTOCOL',
         'tool_json_schema': 'TOOL INVENTORY & USAGE',
         'tool_behavior_summary': 'TOOL INVENTORY & USAGE',
+        'communication_strategy': 'COMMUNICATION STRATEGY',
+        'constraints': 'CONSTRAINTS',
+        'reasoning_style': 'REASONING STYLE / HEURISTICS',
+        'meta_behavior': 'META BEHAVIOR / FALLBACK',
         'context_usage': 'CONTEXT & REASONING STYLE',
         'clarification_protocol': 'CONTEXT & REASONING STYLE',
         'memory_update': 'MEMORY MANAGEMENT',
@@ -359,7 +363,7 @@ class SystemPromptBuilder:
     def input_context_section(params, context):
         memory = context['memory']
         notes = context['notes']
-        clarification_qas = context['extra_context'].get('clarification_qas')
+        clarification_batches = context['extra_context'].get('clarification_qas') or context['extra_context'].get('clarification_clarification_batches')
         section = "---\n\n## 🔎 Input Context\n\n"
         section += "### Current Memory:\n"
         if memory:
@@ -371,10 +375,15 @@ class SystemPromptBuilder:
             section += "  \n".join(notes) + "  \n\n"
         else:
             section += "(none)\n\n"
-        if clarification_qas:
-            section += "### Clarification Q&A so far:\n"
-            for i, (q, a) in enumerate(clarification_qas, 1):
-                section += f"Q{i}: {q}  \nA{i}: {a}  \n"
+        if clarification_batches:
+            section += "### Clarification batches so far:\n"
+            for batch_num, batch in enumerate(clarification_batches, 1):
+                qs = batch.get("questions", [])
+                resp = batch.get("response", "")
+                section += f"Batch {batch_num}:\n"
+                for i, q in enumerate(qs, 1):
+                    section += f"  Q{i}: {q}\n"
+                section += f"  User response: {resp}\n"
         return section
 
     @staticmethod
@@ -387,6 +396,22 @@ class SystemPromptBuilder:
             "  - Use `\"UNDEFINED\"` for any field that cannot be confidently determined.\n"
             "  - Still call the `finalize_notes` with all fields included.\n"
         )
+
+    @staticmethod
+    def communication_strategy_section(params, context):
+        return params.get('custom_text', '')
+
+    @staticmethod
+    def constraints_section(params, context):
+        return params.get('custom_text', '')
+
+    @staticmethod
+    def reasoning_style_section(params, context):
+        return params.get('custom_text', '')
+
+    @staticmethod
+    def meta_behavior_section(params, context):
+        return params.get('custom_text', '')
 
 # Register all section methods after class definition
 SystemPromptBuilder.register_section('intro')(SystemPromptBuilder.intro_section)
@@ -405,6 +430,10 @@ SystemPromptBuilder.register_section('memory_point_examples')(SystemPromptBuilde
 SystemPromptBuilder.register_section('example_output')(SystemPromptBuilder.example_output_section)
 SystemPromptBuilder.register_section('input_context')(SystemPromptBuilder.input_context_section)
 SystemPromptBuilder.register_section('finalization_protocol')(SystemPromptBuilder.finalization_protocol_section)
+SystemPromptBuilder.register_section('communication_strategy')(SystemPromptBuilder.communication_strategy_section)
+SystemPromptBuilder.register_section('constraints')(SystemPromptBuilder.constraints_section)
+SystemPromptBuilder.register_section('reasoning_style')(SystemPromptBuilder.reasoning_style_section)
+SystemPromptBuilder.register_section('meta_behavior')(SystemPromptBuilder.meta_behavior_section)
 
 class ClarificationManager:
     """Handles clarification logic for the agent."""
@@ -536,24 +565,11 @@ class LLMAgent:
 
     def run(self) -> LLMOutput:
         clarification_qas = []
-        archive_done = False
         tool_call_log = []  # Collect tool call logs for summary if needed
-        conversation_history = []
         try:
-            # Build initial system prompt
-            system_prompt = SystemPromptBuilder.build(
-                self.user_memory,
-                self.notes,
-                classification_config=self.classification_config,
-                extra_context={"clarification_qas": clarification_qas},
-                schema=self.schema,
-                parameters=self.parameters,
-                scoring_metrics=self.scoring_metrics
-            )
-            conversation_history.append({"role": "system", "content": system_prompt})
             for round_num in range(self.max_clarification_rounds):
-                # Build user message (context for this round)
-                user_context = SystemPromptBuilder.build(
+                # Build fresh system prompt with all context and Q&A
+                system_prompt = SystemPromptBuilder.build(
                     self.user_memory,
                     self.notes,
                     classification_config=self.classification_config,
@@ -562,14 +578,17 @@ class LLMAgent:
                     parameters=self.parameters,
                     scoring_metrics=self.scoring_metrics
                 )
-                conversation_history.append({"role": "user", "content": user_context})
+                # Zero-shot: only system + user message
+                conversation_history = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": "Proceed"}
+                ]
                 if self.debug_mode:
-                    log.debug("\n-------- SYSTEM PROMPT (round %d) --------\n%s\n------------------------------------------\n" % (round_num+1, user_context))
-                # Pass full conversation history to AgentCore
-                response = self.agent_core.handle_user_message(conversation_history)
+                    log.debug(f"\n-------- SYSTEM PROMPT (round {round_num+1}) --------\n{system_prompt}\n------------------------------------------\n")
+                # Pass zero-shot conversation to AgentCore
+                response = self.agent_core.invoke_with_message_list(conversation_history)
                 if self.debug_mode:
-                    log.debug("\n-------- LLM RESPONSE --------\n%s\n------------------------------\n" % str(response))
-                # Append assistant/tool response to history
+                    log.debug(f"\n-------- LLM RESPONSE --------\n{str(response)}\n------------------------------\n")
                 if response["type"] == "tool_call" and response["tool_details"]:
                     tool_name = response["tool_details"]["name"]
                     tool_output = response["display_message"]
@@ -578,39 +597,29 @@ class LLMAgent:
                             output_data = response["tool_details"]["args"]
                         else:
                             output_data = json.loads(tool_output) if isinstance(tool_output, str) else tool_output
-                        # --- INTERAKTÍV LOG ---
-                        user_print(f"\n[TOOL INVOKED] {tool_name} with args: {json.dumps(output_data, ensure_ascii=False)}", color=CYAN, bold=True)
-                        tool_call_log.append({"tool": tool_name, "args": output_data})
+                        if self.debug_mode:
+                            log.debug(f"[TOOL INVOKED] {tool_name} with args: {json.dumps(output_data, ensure_ascii=False)}")
                         log.info(f"[TOOL INVOKED] {tool_name} with args: {json.dumps(output_data, ensure_ascii=False)}")
-                        # Add tool call as assistant message
-                        conversation_history.append({
-                            "role": "assistant",
-                            "content": f"TOOL CALL: {tool_name} with args: {json.dumps(output_data, ensure_ascii=False)}"
-                        })
                         if tool_name == "ask_user":
                             questions = output_data.get("questions", [])
                             if questions:
                                 user_print("\n[ASK_USER] The agent has the following questions for you:", color=YELLOW, bold=True)
                                 for i, q in enumerate(questions, 1):
                                     user_print(f"{i}: {q}", color=YELLOW)
-                            answers = []
-                            for i, q in enumerate(questions, 1):
-                                a = input(f"Your answer to '{q}': ")
-                                answers.append((q, a))
-                            clarification_qas.extend(answers)
-                            # Add Q&A as assistant message for LLM context
-                            for q, a in answers:
-                                conversation_history.append({
-                                    "role": "assistant",
-                                    "content": f"Clarification Q&A: Q: {q}  A: {a}"
-                                })
-                            continue  # Next round with updated Q&A
+                                user_print("\nPlease answer all questions in a single, free-form text. You may answer in any order or style; the agent will interpret your response.", color=YELLOW)
+                                user_input = input("Your clarification response: ")
+                                # Store the questions and the single free-form response
+                                clarification_context = {
+                                    "questions": questions,
+                                    "response": user_input
+                                }
+                                clarification_qas.append(clarification_context)
+                            continue  # Next round with updated clarification context
                         elif tool_name == "finalize_notes":
                             user_print("\n[FINALIZE_NOTES] The agent is finalizing the output.", color=GREEN, bold=True)
                             final_output = OutputFormatter.format(output_data, original_notes=self.notes)
                             final_output.tool_calls = tool_call_log
                             if self.debug_mode:
-                                # Pretty-print final output
                                 if hasattr(final_output, "model_dump_json"):
                                     output_str = final_output.model_dump_json(indent=2)
                                 else:
@@ -624,22 +633,70 @@ class LLMAgent:
                         log.error(f"[LLMAgent] Failed to parse tool output: {e}. Raw output: {tool_output}")
                         continue
                 else:
-                    # If not a tool call, treat as clarification request or message
                     user_print(f"[LLM MESSAGE] {response['display_message']}", color=BLUE)
                     user_input = input("Your answer: ")
                     clarification_qas.append((response["display_message"], user_input))
-                    # Add Q&A as assistant message for LLM context
-                    conversation_history.append({
-                        "role": "assistant",
-                        "content": f"Clarification Q&A: Q: {response['display_message']}  A: {user_input}"
-                    })
                     continue
-            # If max rounds reached, finalize with placeholders
             log.warning("Maximum clarification rounds reached. Finalizing with placeholders if needed.")
-            entries = [DataEntry(interpreted_text="UNDEFINED", entity_type="UNDEFINED", intent="UNDEFINED", clarity_score=0, raw_text="UNDEFINED")]
-            new_memory_points = ["Clarification incomplete. Some fields may be undefined."]
-            final_output = LLMOutput(entries=entries, new_memory_points=new_memory_points)
-            final_output.tool_calls = tool_call_log
+            # Build a final system prompt with all Q&A and a note about max rounds
+            final_note = f"You have reached the maximum of {self.max_clarification_rounds} clarification rounds. Please finalize your output, even if some fields are UNDEFINED. Number of clarification Q&A rounds: {len(clarification_qas)}."
+            system_prompt = SystemPromptBuilder.build(
+                self.user_memory,
+                self.notes,
+                classification_config=self.classification_config,
+                extra_context={"clarification_qas": clarification_qas, "finalization_note": final_note},
+                schema=self.schema,
+                parameters=self.parameters,
+                scoring_metrics=self.scoring_metrics
+            )
+            conversation_history = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": "Proceed"}
+            ]
+            if self.debug_mode:
+                log.debug(f"\n-------- FINAL SYSTEM PROMPT (max rounds reached) --------\n{system_prompt}\n------------------------------------------\n")
+            response = self.agent_core.invoke_with_message_list(conversation_history)
+            if self.debug_mode:
+                log.debug(f"\n-------- FINAL LLM RESPONSE (max rounds reached) --------\n{str(response)}\n------------------------------\n")
+            if response["type"] == "tool_call" and response["tool_details"] and response["tool_details"]["name"] == "finalize_notes":
+                tool_output = response["display_message"]
+                try:
+                    output_data = json.loads(tool_output) if isinstance(tool_output, str) else tool_output
+                    user_print("\n[FINALIZE_NOTES] The agent is finalizing the output after max clarification rounds.", color=GREEN, bold=True)
+                    final_output = OutputFormatter.format(output_data, original_notes=self.notes)
+                    final_output.tool_calls = tool_call_log
+                    if self.debug_mode:
+                        if hasattr(final_output, "model_dump_json"):
+                            output_str = final_output.model_dump_json(indent=2)
+                        else:
+                            try:
+                                output_str = json.dumps(final_output, indent=2, ensure_ascii=False)
+                            except Exception:
+                                output_str = str(final_output)
+                        log.debug(f"\n-------- FINAL OUTPUT (AFTER MAX ROUNDS) --------\n{output_str}\n------------------------------------------\n")
+                    return final_output
+                except Exception as e:
+                    log.error(f"[LLMAgent] Failed to parse tool output after max rounds: {e}. Raw output: {tool_output}")
+            # If still not valid, fallback
+            entries = [
+                DataEntry(
+                    raw_text=note,
+                    interpreted_text="UNDEFINED",
+                    entity_type="UNDEFINED",
+                    intent="UNDEFINED",
+                    clarity_score=0
+                ) for note in self.notes
+            ]
+            new_memory_points = []
+            output_dict = {
+                "entries": entries,
+                "new_memory_points": new_memory_points
+            }
+            # Optionally include Q&A if any
+            if clarification_qas:
+                output_dict["clarification_clarification_batches"] = clarification_qas
+            # Build LLMOutput object
+            final_output = LLMOutput(**output_dict)
             if self.debug_mode:
                 if hasattr(final_output, "model_dump_json"):
                     output_str = final_output.model_dump_json(indent=2)
@@ -651,7 +708,6 @@ class LLMAgent:
                 log.debug(f"\n-------- FINAL OUTPUT (FALLBACK) --------\n{output_str}\n------------------------------------------\n")
             return final_output
         finally:
-            # Always archive the log at the end of run
             if self.debug_mode:
                 log_dir = "logs"
                 log_filename = os.path.join(log_dir, "llm_agent_debug.log")

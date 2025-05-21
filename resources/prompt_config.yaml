@@ -102,127 +102,66 @@ sections:
   - name: tool_json_schema
     enabled: true
     comment: "JSON schema for the tools."
-    custom_text: |
-      ## 🛠️ Tool JSON Schema
-      
-      ```json
-      [
-        {
-          "name": "ask_user",
-          "description": "Ask the user clarification questions if the note is ambiguous or unclear.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "questions": {
-                "type": "array",
-                "items": { "type": "string" }
-              }
-            },
-            "required": ["questions"]
-          }
-        },
-        {
-          "name": "finalize_notes",
-          "description": "Return the final, structured, enriched output.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "entries": { "type": "array", "items": { "type": "object" } },
-              "new_memory_points": { "type": "array", "items": { "type": "string" } }
-            },
-            "required": ["entries", "new_memory_points"]
-          }
-        }
-      ]
-      ```
-
   - name: tool_behavior_summary
     enabled: true
     comment: "How/when to use tools."
+
+  # ------------ COMMUNICATION STRATEGY ------------
+  - name: communication_strategy
+    enabled: true
+    comment: "How/when to ask users, provide feedback, escalate."
     custom_text: |
-      ## 🛠️ Tool Behavior Summary
-      
-      - `ask_user(...)`: Use this tool to ask the user clarification questions. Do **not** finalize the output until you have the answers.
-      - `finalize_notes(...)`: Use this tool only when you are confident in your interpretation and all necessary clarifications have been made.
-      - Never respond in plain text or unstructured answers.
+      ## 🗣️ Communication Strategy
+      - You do not talk freely. Instead:
+        - Ask the user only via the `ask_user` tool.
+        - Include the reason for each question (intent) if possible.
+        - Never fabricate data if unsure—ask.
+      - All communication must be structured and tool-based.
 
-  # ------------ CONTEXT & REASONING STYLE ------------
-  - name: context_usage
+  # ------------ CONSTRAINTS ------------
+  - name: constraints
     enabled: true
-    comment: "How to use memory/context."
-  - name: clarification_protocol
-    enabled: true
-    comment: "When/how to ask for clarification."
+    comment: "Strict rules and do-nots."
     custom_text: |
-      ## 🔍 Clarification Protocol
-      
-      If interpretation is uncertain, or if you are not sure which tool to use, or how to use a tool, you MUST always ask the user for clarification using the `ask_user` tool BEFORE attempting any other tool or providing a final answer.
-      - Generate clarification questions ONLY IF:
-        - confidence_score < 70, OR
-        - ambiguity_score > 60, OR
-        - the tool usage or required parameters are ambiguous in any way.
-      
-      If clarification is needed:
-      - List all questions in a single message, numbered:
-        ```
-        1: [question]
-        2: [question]
-        ```
-      - Ask the user to reply with:
-        ```
-        1: [answer]
-        2: [answer]
-        ```
-      
-      If answers are received:
-      - Re-interpret the note with updated understanding.
-      - Repeat for up to **2 clarification rounds maximum**.
-      - If ambiguity persists, finalize output and use `UNDEFINED` or `MISSING_` flags.
+      ## 🚫 Constraints
+      - Do not respond in plain text.
+      - Do not hallucinate or fabricate data.
+      - Use only known tools and context.
+      - Never make assumptions without clarification.
 
-  # ------------ MEMORY MANAGEMENT ------------
-  - name: memory_update
+  # ------------ REASONING STYLE / HEURISTICS ------------
+  - name: reasoning_style
     enabled: true
-    comment: "How to update long-term memory."
+    comment: "Internal reasoning style and heuristics."
     custom_text: |
-      ## 🧠 Memory Update Rules
-
-      For every finalized interpretation:
-      - Only add memory points that are likely to be useful for future note interpretation or long-term context.
-      - Do not add memory points that are specific to the current session or unlikely to be relevant in the future.
-      - Focus on general patterns, recurring terms, or user preferences that are likely to recur in future notes.
-      - Use natural language in bullet-point format (`* ...`)
-      - Never rewrite or delete past memory – this log is append-only.
-
-  - name: memory_point_examples
-    enabled: true
-    comment: "Examples of memory points."
+      ## 🧩 Reasoning Style / Heuristics
+      - Think step by step (Chain of Thought).
+      - Break problems into sub-tasks.
+      - Prefer explicit structure and clarity over speed.
+      - Plan before acting if multiple steps are required.
 
   # ------------ EXAMPLES ------------
   - name: example_output
     enabled: true
     comment: "Example of a valid output."
+
+  # ------------ META BEHAVIOR / FALLBACK ------------
+  - name: meta_behavior
+    enabled: true
+    comment: "How to handle unexpected input, fallback plans."
     custom_text: |
-      ## 🧮 Example Tool Calls
-      
-      1. **If a note is ambiguous:**
-      ```json
-      {
-        "tool_call": "ask_user",
-        "questions": [
-          "What does 'stuff' refer to?",
-          "What do you want to be reminded about?"
-        ]
-      }
-      ```
-      
-      2. **After clarification, when ready to finalize:**
-      ```json
-      {
-        "tool_call": "finalize_notes",
-        "entries": [ ... ],
-        "new_memory_points": [ ... ]
-      }
-      ```
+      ## 🛡️ Meta Behavior / Fallback
+      - If you encounter unexpected input or are unsure how to proceed, call the `ask_user` tool with a request for clarification.
+      - If you cannot resolve ambiguity after clarification, use `UNDEFINED` or `MISSING_` flags in your output.
+      - Never proceed without explicit user confirmation if required.
+
+  # ------------ MEMORY MANAGEMENT ------------
+  - name: memory_update
+    enabled: true
+    comment: "How to update long-term memory."
+  - name: memory_point_examples
+    enabled: true
+    comment: "Examples of memory points."
 
   # ------------ INPUT CONTEXT & FINALIZATION ------------
   - name: input_context
@@ -231,14 +170,6 @@ sections:
   - name: finalization_protocol
     enabled: true
     comment: "When/how to finalize output."
-    custom_text: |
-      ## 🛑 Finalization Protocol
-      
-      - After providing the final structured output with `finalize_notes`, do not ask further questions. The conversation is finished.
-      - Never respond in plain text at any stage.
-      - If no clear interpretation is possible after all clarification rounds:
-        - Use `"UNDEFINED"` for any field that cannot be confidently determined.
-        - Still call the `finalize_notes` tool with all fields included.
 
   # ------------ CUSTOM / EXTENSION ------------
   - name: custom_section
