@@ -13,6 +13,8 @@ from datetime import datetime
 from abc import ABC, abstractmethod
 import threading
 import yaml
+from note_interpreter.user_output import user_print, CYAN, YELLOW, MAGENTA, BLUE, GREEN, RED, WHITE, BOLD
+import json
 
 StateType = TypeVar('StateType', bound=BaseModel)
 ResponseType = TypeVar('ResponseType', bound=BaseModel)
@@ -40,12 +42,12 @@ class BaseSharedContext(BaseModel):
                 self._dynamic_fields[key] = value
             
             # Mindig megjelenő informatív üzenet
-            print(f"\n✓ Shared context updated with fields: {', '.join(fields.keys())}")
+            self.printer(f"\n✓ Shared context updated with fields: {', '.join(fields.keys())}")
             
             # Debug információk csak debug módban
             if debug:
-                print(f"[DEBUG] Updated fields: {fields}")
-                print(f"[DEBUG] Current dynamic fields: {self._dynamic_fields}")
+                self.logger.debug(f"[DEBUG] Updated fields: {fields}")
+                self.logger.debug(f"[DEBUG] Current dynamic fields: {self._dynamic_fields}")
 
     def save_context(self, system_prompt_name: str, use_case: str, llm: Any, description: str) -> str:
         """Save shared context to a YAML file"""
@@ -105,18 +107,18 @@ class BaseSharedContext(BaseModel):
 
     def print_fields(self) -> None:
         """Print all fields including dynamic ones"""
-        print("\nShared Context Fields:")
-        print("-" * 20)
+        self.printer("\nShared Context Fields:")
+        self.printer("-" * 20)
         
         # Get all model fields
         model_data = self.model_dump()
         
         # Print static fields first
-        print("Static Fields:")
-        print(f"metadata: {self.metadata}")
+        self.printer("Static Fields:")
+        self.printer(f"metadata: {self.metadata}")
         
         # Print dynamic fields
-        print("\nDynamic Fields:")
+        self.printer("\nDynamic Fields:")
         internal_fields = {
             'metadata', 
             'model_computed_fields', 
@@ -128,9 +130,9 @@ class BaseSharedContext(BaseModel):
         
         for field_name, value in model_data.items():
             if field_name not in internal_fields:
-                print(f"{field_name}: {value}")
+                self.printer(f"{field_name}: {value}")
         
-        print("-" * 20)
+        self.printer("-" * 20)
 
     @classmethod
     def load_context(cls, filename: str, debug: bool = False) -> 'BaseSharedContext':
@@ -149,13 +151,13 @@ class BaseSharedContext(BaseModel):
                 setattr(instance, key, value)
             
             if debug:
-                print(f"[DEBUG] Loaded context with dynamic fields: {instance._dynamic_fields}")
+                logging.getLogger("note_interpreter").debug(f"[DEBUG] Loaded context with dynamic fields: {instance._dynamic_fields}")
             
             return instance
             
         except Exception as e:
             if debug:
-                print(f"[ERROR] Failed to load context: {str(e)}")
+                logging.getLogger("note_interpreter").debug(f"[ERROR] Failed to load context: {str(e)}")
             return cls()
 
     def get_content_fields(self) -> Dict[str, Any]:
@@ -266,6 +268,7 @@ class AgentCore(Generic[StateType, ResponseType]):
     """
     Core agent implementation with interactive capabilities.
     :param logger: Logger instance to use for logging (default: standard logging.getLogger(__name__))
+    :param printer: User-facing output function (default: user_print)
     """
     def __init__(
         self,
@@ -277,13 +280,15 @@ class AgentCore(Generic[StateType, ResponseType]):
         tool_provider: Optional['ToolProvider'] = None, #todo delete this, llm bol kitalalja
         should_initiate: bool = True,
         debug_mode: bool = False,
-        logger=None
+        logger=None,
+        printer=None
     ):
         self.debug_mode = debug_mode
         self.llm = llm
         self.tools = tools
         self.shared_context = shared_context or {}
         self.context_usage = context_usage or {}
+        self.printer = printer or user_print
         
         # Prompt injection ha van shared context és usage konfig
         if shared_context and context_usage and context_usage.get('inject_to_system_prompt'):
@@ -292,7 +297,7 @@ class AgentCore(Generic[StateType, ResponseType]):
                 if logger:
                     logger.debug(f"\n[DEBUG] System prompt after injection: {system_prompt}")
                 else:
-                    print(f"\n[DEBUG] System prompt after injection: {system_prompt}")
+                    self.logger.debug(f"[DEBUG] System prompt after injection: {system_prompt}")
         
         self.system_prompt = system_prompt
         
@@ -333,6 +338,12 @@ class AgentCore(Generic[StateType, ResponseType]):
                 "content": message,
                 "timestamp": datetime.now().isoformat()
             })
+
+            # --- LOG the full conversation history before LLM call ---
+            try:
+                self.logger.debug("[DEBUG] Conversation history sent to LLM:\n" + json.dumps(self.state.conversation_history, indent=2, ensure_ascii=False))
+            except Exception as e:
+                self.logger.debug(f"[DEBUG] Could not serialize conversation history: {e}")
 
             # LLM response processing
             llm_response = self.bound_llm.invoke(self.state.conversation_history)
@@ -479,7 +490,7 @@ class AgentCore(Generic[StateType, ResponseType]):
         """Helper method to add messages to conversation history"""
         self.state.conversation_history.append(message)
         if self.debug_mode:
-            print(f"\n[DEBUG] Adding to history: {message}\n")
+            self.logger.debug(f"[DEBUG] Adding to history: {message}")
 
     def get_state(self) -> AgentState:
         """Get current state"""
@@ -519,14 +530,14 @@ class AgentCore(Generic[StateType, ResponseType]):
         return self.state.last_response
 
     @staticmethod
-    def print_user_message(message: str):
-        """Prints the user message in green."""
-        print(f"\033[92mUser: {message}\033[0m")  # Green text
+    def print_user_message(message: str, printer=user_print):
+        """Prints the user message using the provided printer."""
+        printer(f"User: {message}")
 
     @staticmethod
-    def print_agent_message(message: str):
-        """Prints the agent message in blue."""
-        print(f"\033[94mAssistant: {message}\033[0m")  # Blue text
+    def print_agent_message(message: str, printer=user_print):
+        """Prints the agent message using the provided printer."""
+        printer(f"Assistant: {message}")
 
     def _inject_prompt_variables(self, prompt: str) -> str:
         """Inject shared context values into prompt template"""
@@ -536,11 +547,11 @@ class AgentCore(Generic[StateType, ResponseType]):
             if hasattr(self.shared_context, field):
                 prompt_vars[field] = getattr(self.shared_context, field)
             elif self.debug_mode:
-                print(f"\n[DEBUG] Warning: Field {field} not found in shared context")
+                self.logger.debug(f"[DEBUG] Warning: Field {field} not found in shared context")
         
         try:
             return prompt.format(**prompt_vars)
         except KeyError as e:
             if self.debug_mode:
-                print(f"\n[DEBUG] Error formatting prompt: {e}")
+                self.logger.debug(f"[DEBUG] Error formatting prompt: {e}")
             return prompt

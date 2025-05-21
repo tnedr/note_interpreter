@@ -32,7 +32,7 @@ DataEntry:
     type: integer
     description: "Understandability (0–100): how grammatically complete and parseable the note is."
     range: "0-100"
-  clarification_questions:
+  ask_user_questions:
     type: array
     items: string
-    description: "Clarification questions to ask the user if the note is ambiguous or unclear. (Optional)" 
+    description: "Questions to ask the user for clarification if the note is ambiguous or unclear. (Optional)" 

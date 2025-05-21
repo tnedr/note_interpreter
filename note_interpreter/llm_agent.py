@@ -39,8 +39,30 @@ class SystemPromptBuilder:
     """
     Config-driven, registry-based prompt builder. Each section is a function registered in a central registry.
     The prompt is built by reading a YAML config file that specifies the order, enabled/disabled state, and parameters for each section.
+    Now adds a visible visual separator line before each major section for human clarity.
     """
     section_registry: Dict[str, Callable[[dict, dict], str]] = {}
+
+    # Mapping from section name to human-readable header (should match prompt_config.yaml headers)
+    SECTION_HEADER_MAP = {
+        'intro': 'IDENTITY / ROLE',
+        'goals': 'GOALS / OBJECTIVES',
+        'output_schema_and_meanings': 'OPERATIONAL PROTOCOL',
+        'classification': 'OPERATIONAL PROTOCOL',
+        'scoring_guidelines': 'OPERATIONAL PROTOCOL',
+        'parameter_explanations': 'OPERATIONAL PROTOCOL',
+        'output_validation_rules': 'OPERATIONAL PROTOCOL',
+        'tool_json_schema': 'TOOL INVENTORY & USAGE',
+        'tool_behavior_summary': 'TOOL INVENTORY & USAGE',
+        'context_usage': 'CONTEXT & REASONING STYLE',
+        'clarification_protocol': 'CONTEXT & REASONING STYLE',
+        'memory_update': 'MEMORY MANAGEMENT',
+        'memory_point_examples': 'MEMORY MANAGEMENT',
+        'example_output': 'EXAMPLES',
+        'input_context': 'INPUT CONTEXT & FINALIZATION',
+        'finalization_protocol': 'INPUT CONTEXT & FINALIZATION',
+        'custom_section': 'CUSTOM / EXTENSION',
+    }
 
     @classmethod
     def register_section(cls, name: str):
@@ -54,7 +76,9 @@ class SystemPromptBuilder:
         """
         Build the prompt from a YAML config file. Each enabled section is rendered in order.
         Now supports loading classification config from the file specified in the 'classification' section params.
+        Adds a visible visual separator line before each major section for human clarity.
         """
+        import re
         with open(config_path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
         sections = config.get('sections', [])
@@ -89,7 +113,15 @@ class SystemPromptBuilder:
             name = section['name']
             params = section.get('params', {})
             custom_text = section.get('custom_text')
-            # Custom text/override
+            # --- Visual separator ---
+            # Use mapping if available, else prettify the section name
+            header = cls.SECTION_HEADER_MAP.get(name)
+            if not header:
+                # Prettify: underscores to spaces, capitalize words
+                header = re.sub(r'_', ' ', name).upper()
+            separator = f"------------ {header} ------------"
+            prompt_parts.append(separator)
+            # --- Custom text/override ---
             if custom_text:
                 prompt_parts.append(custom_text)
                 continue
@@ -102,7 +134,7 @@ class SystemPromptBuilder:
                     log.warning(f"Prompt section '{name}' failed: {e}")
             else:
                 log.warning(f"Prompt section '{name}' not found in registry.")
-        prompt = "\n".join([p for p in prompt_parts if p])
+        prompt = "\n\n".join([p for p in prompt_parts if p])
         log.debug("[DEBUG] Final built system prompt:\n" + prompt)
         return prompt
 
@@ -136,11 +168,11 @@ class SystemPromptBuilder:
         return (
             "## 🎯 Your Goals\n\n"
             "For each input note, your output must include:\n"
-            "1. **Structured JSON Output** via the `finalize_notes`, always including:\n"
+            "1. **Structured JSON Output** via the `finalize_notes` tool, always including:\n"
             "   - `entries`: interpreted notes with enriched metadata\n"
             "   - `new_memory_points`: long-term memory insights (natural language bullet points)\n"
-            "   - `ask_user_questions`: questions if clarification is needed\n"
-            "2. You MUST use the tool – never respond in plain text.\n"
+            "2. If you are uncertain, you MUST use the `ask_user` tool to ask clarification questions BEFORE finalizing.\n"
+            "3. You MUST use the tools – never respond in plain text.\n"
         )
 
     @staticmethod
@@ -183,30 +215,36 @@ class SystemPromptBuilder:
 
     @staticmethod
     def tool_json_schema_section(params, context):
-        schema = {
-            "type": "object",
-            "properties": {
-                "entries": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "raw_text": {"type": "string"},
-                            "interpreted_text": {"type": "string"},
-                            "entity_type": {"type": "string"},
-                            "intent": {"type": "string"},
-                            "clarity_score": {"type": "integer"}
-                        },
-                        "required": ["raw_text", "interpreted_text", "entity_type", "intent", "clarity_score"]
-                    }
-                },
-                "new_memory_points": {"type": "array", "items": {"type": "string"}},
-                "ask_user_questions": {"type": "array", "items": {"type": "string"}}
+        schema = [
+            {
+                "name": "ask_user",
+                "description": "Ask the user clarification questions if the note is ambiguous or unclear.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "questions": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                        }
+                    },
+                    "required": ["questions"]
+                }
             },
-            "required": ["entries", "new_memory_points", "ask_user_questions"]
-        }
+            {
+                "name": "finalize_notes",
+                "description": "Return the final, structured, enriched output.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "entries": { "type": "array", "items": { "type": "object" } },
+                        "new_memory_points": { "type": "array", "items": { "type": "string" } }
+                    },
+                    "required": ["entries", "new_memory_points"]
+                }
+            }
+        ]
         return (
-            "## 🛠️ Tool JSON Schema (for finalize_notes)\n\n"
+            "## 🛠️ Tool JSON Schema\n\n"
             "```json\n" + json.dumps(schema, indent=2) + "\n```\n"
         )
 
@@ -222,22 +260,19 @@ class SystemPromptBuilder:
     def output_validation_rules_section(params, context):
         return (
             "## 🔒 Output Validation Rules (Mandatory)\n\n"
-            "- You MUST return a valid JSON object calling `finalize_notes`.\n"
-            "- You MUST include all three fields: `entries`, `new_memory_points`, and `ask_user_questions`.\n"
-            "- Even if empty, provide an empty list (`[]`) for any missing category.\n"
+            "- You MUST return a valid JSON object calling either `ask_user` or `finalize_notes`.\n"
+            "- You MUST use the tools for all communication.\n"
             "- Never return plain text or unstructured answers.\n"
+            "- For `finalize_notes`, always include both `entries` and `new_memory_points` (even if empty).\n"
+            "- For `ask_user`, always include at least one question.\n"
         )
 
     @staticmethod
     def tool_behavior_summary_section(params, context):
         return (
             "## 🛠️ Tool Behavior Summary\n\n"
-            "- `finalize_notes(...)` is the only valid way to output results.\n"
-            "- It accepts three parameters:\n"
-            "  - `entries`: your main result\n"
-            "  - `new_memory_points`: context insights\n"
-            "  - `ask_user_questions`: if you need help\n"
-            "- If you need to ask the user for clarification, always use the `ask_user` tool.\n"
+            "- `ask_user(...)`: Use this tool to ask the user clarification questions. Do **not** finalize the output until you have the answers.\n"
+            "- `finalize_notes(...)`: Use this tool only when you are confident in your interpretation and all necessary clarifications have been made.\n"
             "- Never respond in plain text or unstructured answers.\n"
         )
 
@@ -315,8 +350,7 @@ class SystemPromptBuilder:
             "  ],\n"
             "  \"new_memory_points\": [\n"
             "    \"* Tamas is currently working on a Q3 marketing launch plan and often uses 'plan' to refer to it.\"\n"
-            "  ],\n"
-            "  \"ask_user_questions\": []\n"
+            "  ]\n"
             "}\n"
             "```\n"
         )
@@ -376,17 +410,17 @@ class ClarificationManager:
     """Handles clarification logic for the agent."""
     @staticmethod
     def needs_clarification(agent_response: dict) -> bool:
-        return bool(agent_response.get('ask_user_questions'))
+        return bool(agent_response.get('questions'))
 
     @staticmethod
     def get_questions(agent_response: dict) -> List[str]:
-        return agent_response.get('ask_user_questions', [])
+        return agent_response.get('questions', [])
 
     @staticmethod
     def update_clarification_qas(clarification_qas: List[Tuple[str, str]], questions: List[str]) -> List[Tuple[str, str]]:
         answers = []
         for q in questions:
-            print(q)
+            user_print(q, color=YELLOW)
             a = input(f"Your answer to '{q}': ")
             answers.append((q, a))
         return clarification_qas + answers
@@ -452,21 +486,19 @@ class LLMAgent:
             ),
             shared_context=self.shared_context,
             debug_mode=self.debug_mode,
-            logger=log
+            logger=log,
+            printer=user_print
         )
 
     def _get_finalize_notes_tool(self) -> ToolDefinition:
-        def finalize_notes(entries=None, new_memory_points=None, ask_user_questions=None, shared_context=None):
+        def finalize_notes(entries=None, new_memory_points=None, shared_context=None):
             if entries is None:
                 entries = []
             if new_memory_points is None:
                 new_memory_points = []
-            if ask_user_questions is None:
-                ask_user_questions = []
             return {
                 "entries": entries,
-                "new_memory_points": new_memory_points,
-                "ask_user_questions": ask_user_questions
+                "new_memory_points": new_memory_points
             }
         return ToolDefinition(
             name="finalize_notes",
@@ -476,22 +508,18 @@ class LLMAgent:
                 "properties": {
                     "entries": {"type": "array", "items": {"type": "object"}},
                     "new_memory_points": {"type": "array", "items": {"type": "string"}},
-                    "ask_user_questions": {"type": "array", "items": {"type": "string"}},
                 },
-                "required": ["entries", "new_memory_points", "ask_user_questions"]
+                "required": ["entries", "new_memory_points"]
             },
             function=finalize_notes
         )
 
     def _get_ask_user_tool(self) -> ToolDefinition:
-        def ask_user(questions=None, context=None, shared_context=None):
+        def ask_user(questions=None, shared_context=None):
             if questions is None:
                 questions = []
-            if context is None:
-                context = []
             return {
-                "questions": questions,
-                "context": context
+                "questions": questions
             }
         return ToolDefinition(
             name="ask_user",
@@ -500,7 +528,6 @@ class LLMAgent:
                 "type": "object",
                 "properties": {
                     "questions": {"type": "array", "items": {"type": "string"}},
-                    "context": {"type": "array", "items": {"type": "string"}},
                 },
                 "required": ["questions"]
             },
@@ -511,8 +538,21 @@ class LLMAgent:
         clarification_qas = []
         archive_done = False
         tool_call_log = []  # Collect tool call logs for summary if needed
+        conversation_history = []
         try:
+            # Build initial system prompt
+            system_prompt = SystemPromptBuilder.build(
+                self.user_memory,
+                self.notes,
+                classification_config=self.classification_config,
+                extra_context={"clarification_qas": clarification_qas},
+                schema=self.schema,
+                parameters=self.parameters,
+                scoring_metrics=self.scoring_metrics
+            )
+            conversation_history.append({"role": "system", "content": system_prompt})
             for round_num in range(self.max_clarification_rounds):
+                # Build user message (context for this round)
                 user_context = SystemPromptBuilder.build(
                     self.user_memory,
                     self.notes,
@@ -522,12 +562,14 @@ class LLMAgent:
                     parameters=self.parameters,
                     scoring_metrics=self.scoring_metrics
                 )
+                conversation_history.append({"role": "user", "content": user_context})
                 if self.debug_mode:
                     log.debug("\n-------- SYSTEM PROMPT (round %d) --------\n%s\n------------------------------------------\n" % (round_num+1, user_context))
-                response = self.agent_core.handle_user_message(user_context)
+                # Pass full conversation history to AgentCore
+                response = self.agent_core.handle_user_message(conversation_history)
                 if self.debug_mode:
                     log.debug("\n-------- LLM RESPONSE --------\n%s\n------------------------------\n" % str(response))
-                # Check which tool was called
+                # Append assistant/tool response to history
                 if response["type"] == "tool_call" and response["tool_details"]:
                     tool_name = response["tool_details"]["name"]
                     tool_output = response["display_message"]
@@ -540,6 +582,11 @@ class LLMAgent:
                         user_print(f"\n[TOOL INVOKED] {tool_name} with args: {json.dumps(output_data, ensure_ascii=False)}", color=CYAN, bold=True)
                         tool_call_log.append({"tool": tool_name, "args": output_data})
                         log.info(f"[TOOL INVOKED] {tool_name} with args: {json.dumps(output_data, ensure_ascii=False)}")
+                        # Add tool call as assistant message
+                        conversation_history.append({
+                            "role": "assistant",
+                            "content": f"TOOL CALL: {tool_name} with args: {json.dumps(output_data, ensure_ascii=False)}"
+                        })
                         if tool_name == "ask_user":
                             questions = output_data.get("questions", [])
                             if questions:
@@ -551,6 +598,12 @@ class LLMAgent:
                                 a = input(f"Your answer to '{q}': ")
                                 answers.append((q, a))
                             clarification_qas.extend(answers)
+                            # Add Q&A as assistant message for LLM context
+                            for q, a in answers:
+                                conversation_history.append({
+                                    "role": "assistant",
+                                    "content": f"Clarification Q&A: Q: {q}  A: {a}"
+                                })
                             continue  # Next round with updated Q&A
                         elif tool_name == "finalize_notes":
                             user_print("\n[FINALIZE_NOTES] The agent is finalizing the output.", color=GREEN, bold=True)
@@ -575,12 +628,17 @@ class LLMAgent:
                     user_print(f"[LLM MESSAGE] {response['display_message']}", color=BLUE)
                     user_input = input("Your answer: ")
                     clarification_qas.append((response["display_message"], user_input))
+                    # Add Q&A as assistant message for LLM context
+                    conversation_history.append({
+                        "role": "assistant",
+                        "content": f"Clarification Q&A: Q: {response['display_message']}  A: {user_input}"
+                    })
                     continue
             # If max rounds reached, finalize with placeholders
             log.warning("Maximum clarification rounds reached. Finalizing with placeholders if needed.")
             entries = [DataEntry(interpreted_text="UNDEFINED", entity_type="UNDEFINED", intent="UNDEFINED", clarity_score=0, raw_text="UNDEFINED")]
             new_memory_points = ["Clarification incomplete. Some fields may be undefined."]
-            final_output = LLMOutput(entries=entries, new_memory_points=new_memory_points, ask_user_questions=[])
+            final_output = LLMOutput(entries=entries, new_memory_points=new_memory_points)
             final_output.tool_calls = tool_call_log
             if self.debug_mode:
                 if hasattr(final_output, "model_dump_json"):
@@ -604,9 +662,8 @@ class LLMAgent:
                 try:
                     if os.path.exists(log_filename):
                         shutil.copyfile(log_filename, archive_filename)
-                        log.print(f"[DEBUG] Archived log to {archive_filename}")
                 except Exception as e:
-                    log.print(f"[DEBUG] Could not archive log: {e}")
+                    pass
 
     def _is_fallback_output(self, output: LLMOutput) -> bool:
         """Returns True if the output is a fallback/placeholder (e.g., UNDEFINED fields)."""
@@ -625,4 +682,4 @@ if __name__ == "__main__":
     user_memory = MemoryManager.load_from_md("docs/examples/example_user_memory.md")
     agent = LLMAgent(notes, user_memory)
     output = agent.run()
-    log.print(output.model_dump_json(indent=2)) 
+    user_print(output.model_dump_json(indent=2), color=CYAN) 

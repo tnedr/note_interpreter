@@ -26,8 +26,8 @@ def test_agent_initialization():
     agent = LLMAgent(notes=["test"], user_memory=["* memory"], debug_mode=True)
     # Initialization test: agent should have tools and classification config
     assert hasattr(agent, 'tools')
-    assert any(t.name == 'finalize_notes_tool' for t in agent.tools)
-    assert any(t.name == 'clarification_tool' for t in agent.tools)
+    assert any(t.name == 'finalize_notes' for t in agent.tools)
+    assert any(t.name == 'ask_user' for t in agent.tools)
 
 def test_mock_output_no_api_key(monkeypatch):
     # Mock ChatOpenAI to avoid requiring a real API key
@@ -35,8 +35,8 @@ def test_mock_output_no_api_key(monkeypatch):
         def invoke(self, *args, **kwargs):
             return {
                 "type": "tool_call",
-                "tool_details": {"name": "finalize_notes_tool"},
-                "display_message": '{"entries": [{"interpreted_text": "example1", "entity_type": "task", "intent": "@DO", "clarity_score": 100}], "new_memory_points": [], "clarification_questions": []}'
+                "tool_details": {"name": "finalize_notes"},
+                "display_message": '{"entries": [{"interpreted_text": "example1", "entity_type": "task", "intent": "@DO", "clarity_score": 100}], "new_memory_points": [], "ask_user_questions": []}'
             }
     monkeypatch.setattr("note_interpreter.llm_agent.ChatOpenAI", lambda *a, **kw: DummyLLM())
     # Patch tool provider logic for DummyLLM
@@ -138,15 +138,15 @@ def test_agent_tool_registration():
     classification_config = {'entity_types': ['task'], 'intents': ['@DO']}
     agent = LLMAgent(notes=["test"], user_memory=["* memory"], classification_config=classification_config)
     tool_names = [t.name for t in agent.tools]
-    assert 'finalize_notes_tool' in tool_names
-    assert 'clarification_tool' in tool_names
+    assert 'finalize_notes' in tool_names
+    assert 'ask_user' in tool_names
     assert agent.classification_config == classification_config
 
 def test_clarification_loop(monkeypatch):
     """Test the clarification loop by mocking the LLM/tool to always ask for clarification."""
     class DummyExecutor:
         def invoke(self, _):
-            return {"type": "tool_call", "tool_details": {"name": "clarification_tool"}, "display_message": '{"questions": ["What do you mean by stuff?", "Which functionalities?"]}'}
+            return {"type": "tool_call", "tool_details": {"name": "ask_user"}, "display_message": '{"questions": ["What do you mean by stuff?", "Which functionalities?"]}'}
     agent = LLMAgent(notes=["unclear note"], user_memory=["* memory"], classification_config={'entity_types': ['task'], 'intents': ['@DO']})
     agent.agent_core.handle_user_message = DummyExecutor().invoke
     # Simulate user answers (mock input)
@@ -166,9 +166,9 @@ def test_full_enrichment_workflow(monkeypatch):
         def invoke(self, _):
             if self.calls == 0:
                 self.calls += 1
-                return {"type": "tool_call", "tool_details": {"name": "clarification_tool"}, "display_message": '{"questions": ["Clarify?"]}'}
+                return {"type": "tool_call", "tool_details": {"name": "ask_user"}, "display_message": '{"questions": ["Clarify?"]}'}
             else:
-                return {"type": "tool_call", "tool_details": {"name": "finalize_notes_tool"}, "display_message": '{"entries": [{"field1": "interpreted", "field2": 1}], "new_memory_points": ["* clarified"], "clarification_questions": []}'}
+                return {"type": "tool_call", "tool_details": {"name": "finalize_notes"}, "display_message": '{"entries": [{"field1": "interpreted", "field2": 1}], "new_memory_points": ["* clarified"], "ask_user_questions": []}'}
     agent = LLMAgent(notes=["unclear note"], user_memory=["* memory"], classification_config={'entity_types': ['task'], 'intents': ['@DO']})
     agent.agent_core.handle_user_message = DummyExecutor().invoke
     # Mock input for clarification
@@ -206,18 +206,18 @@ def test_tool_invocation_sequence_and_args(monkeypatch):
             self.calls = []
         def handle_user_message(self, user_context):
             if not self.calls:
-                self.calls.append(('clarification_tool', user_context))
+                self.calls.append(('ask_user', user_context))
                 return {
                     "type": "tool_call",
-                    "tool_details": {"name": "clarification_tool"},
+                    "tool_details": {"name": "ask_user"},
                     "display_message": '{"questions": ["What is stuff?"]}'
                 }
             else:
-                self.calls.append(('finalize_notes_tool', user_context))
+                self.calls.append(('finalize_notes', user_context))
                 return {
                     "type": "tool_call",
-                    "tool_details": {"name": "finalize_notes_tool"},
-                    "display_message": '{"entries": [{"interpreted_text": "clarified stuff", "entity_type": "task", "intent": "@DO", "clarity_score": 100}], "new_memory_points": ["* clarified stuff"], "clarification_questions": []}'
+                    "tool_details": {"name": "finalize_notes"},
+                    "display_message": '{"entries": [{"interpreted_text": "clarified stuff", "entity_type": "task", "intent": "@DO", "clarity_score": 100}], "new_memory_points": ["* clarified stuff"], "ask_user_questions": []}'
                 }
     agent = LLMAgent(notes=["unclear stuff"], user_memory=["* memory"], classification_config={'entity_types': ['task'], 'intents': ['@DO']})
     dummy_core = DummyAgentCore()
@@ -226,8 +226,8 @@ def test_tool_invocation_sequence_and_args(monkeypatch):
     monkeypatch.setattr('builtins.input', lambda prompt: "clarified stuff")
     output = agent.run()
     # Check tool call sequence
-    assert dummy_core.calls[0][0] == 'clarification_tool'
-    assert dummy_core.calls[1][0] == 'finalize_notes_tool'
+    assert dummy_core.calls[0][0] == 'ask_user'
+    assert dummy_core.calls[1][0] == 'finalize_notes'
     # Check that the clarification answer is present in the final output
     assert output.entries[0].interpreted_text == "clarified stuff"
     assert "clarified stuff" in output.new_memory_points[0]

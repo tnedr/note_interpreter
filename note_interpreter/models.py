@@ -37,5 +37,4 @@ class LLMOutput(BaseModel):
     """
     entries: List[DataEntry]
     new_memory_points: List[str] = Field(default_factory=list, description="New bullet points to append to the Markdown memory.")
-    ask_user_questions: List[str] = Field(default_factory=list, description="Questions to ask the user for clarification.")
     tool_calls: List[dict] = Field(default_factory=list, description="List of tool calls made during the run.") 

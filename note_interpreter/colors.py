@@ -1,3 +1,4 @@
+# ANSI színkódok kizárólag user-facing outputhoz (user_print)
 RESET = "\033[0m"
 BOLD = "\033[1m"
 CYAN = "\033[36m"

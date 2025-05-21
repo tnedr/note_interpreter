@@ -46,4 +46,10 @@
 - Finomítottam a promptot, hogy az agent mindig kérjen pontosítást, ha a tool használat nem egyértelmű, és létrehoztam egy ToolOnlyAgentCore osztályt, amely csak tool használatot engedélyez.
 - now 2024-06-13
 - Átneveztem a toolokat (clarification_tool -> ask_user, finalize_notes_tool -> finalize_notes), a promptot és a példát is ehhez igazítottam, és készítettem egy demót, ahol az agentnek biztosan az ask_user toolt kell használnia.
+- Minden user-facing printet user_print-re cseréltem, színezéssel, hogy a terminálban csak a felhasználónak szóló, jól elkülöníthető üzenetek jelenjenek meg.
+- Eltávolítottam minden log.print() és technikai print/debug outputot a terminálról, így mostantól csak a user_print által kiírt, felhasználónak szóló üzenetek jelennek meg a konzolon.
+- Egységesítettem a clarification mezőnevet ask_user_questions-re a teljes kódban, promptban, schema-ban, modellekben, tool definíciókban és példákban.
+- Added visible section headers (e.g., '------------ IDENTITY / ROLE ------------') to the prompt config for human clarity, following canonical prompt design guidelines.
+- Modified SystemPromptBuilder so that every major section in the generated prompt is now preceded by a visible visual separator line (e.g., '------------ SECTION NAME ------------') for human clarity, matching the config structure.
+- Grouped OUTPUT SCHEMA & CLASSIFICATION, SCORING & CLARIFICATION GUIDELINES, and PARAMETERS & VALIDATION as subsections under a new main section 'OPERATIONAL PROTOCOL' in the prompt config and updated the prompt builder so these all appear under a single visual separator in the generated prompt.
 
