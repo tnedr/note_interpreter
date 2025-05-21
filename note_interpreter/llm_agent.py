@@ -12,6 +12,7 @@ import datetime
 from note_interpreter.colors import RESET, BOLD, CYAN, YELLOW, MAGENTA, BLUE, GREEN, RED, WHITE, BANNER_COLORS
 from note_interpreter.log import log
 from note_interpreter.user_output import user_print
+from .base_agent import BaseAgent
 
 class MemoryManager:
     """Handles loading and saving long-term memory."""
@@ -76,7 +77,7 @@ class SystemPromptBuilder:
         return decorator
 
     @classmethod
-    def build_from_config(cls, memory: List[str], notes: List[str], classification_config: dict = None, extra_context: Optional[dict] = None, schema: dict = None, parameters: dict = None, scoring_metrics: dict = None, config_path: str = "resources/prompt_config.yaml") -> str:
+    def build_from_config(cls, memory: List[str], notes: List[str], classification_config: dict = None, extra_context: Optional[dict] = None, schema: dict = None, parameters: dict = None, scoring_metrics: dict = None, config_path: str = "resources/single_agent/prompt_config.yaml") -> str:
         """
         Build the prompt from a YAML config file. Each enabled section is rendered in order.
         Now supports loading classification config from the file specified in the 'classification' section params.
@@ -148,7 +149,7 @@ class SystemPromptBuilder:
         Backward-compatible build method. Uses config if provided, else default config.
         """
         if config_path is None:
-            config_path = "resources/prompt_config.yaml"
+            config_path = "resources/single_agent/prompt_config.yaml"
         return cls.build_from_config(memory, notes, classification_config, extra_context, schema, parameters, scoring_metrics, config_path)
 
     # --- Section Implementations ---
@@ -208,7 +209,7 @@ class SystemPromptBuilder:
         Unified output schema and field meanings, loaded from YAML.
         params['schema_file'] should specify the YAML file.
         """
-        schema_file = params.get('schema_file', 'resources/notes_output_schema.yaml')
+        schema_file = params.get('schema_file', 'resources/single_agent/notes_output_schema.yaml')
         import yaml as _yaml
         with open(schema_file, 'r', encoding='utf-8') as f:
             schema = _yaml.safe_load(f)
@@ -467,7 +468,7 @@ class OutputFormatter:
         new_memory_points = agent_response.get('new_memory_points', [])
         return LLMOutput(entries=entries, new_memory_points=new_memory_points)
 
-class LLMAgent:
+class SingleAgent(BaseAgent):
     _schema = None
     _parameters = None
     """
@@ -483,12 +484,12 @@ class LLMAgent:
         self.user_memory = user_memory
         self.classification_config = classification_config or {}
         # Load schema and parameters if not already loaded
-        if not LLMAgent._schema:
-            LLMAgent._schema = load_schema_from_yaml("resources/notes_output_schema.yaml")
-        if not LLMAgent._parameters:
-            LLMAgent._parameters = load_parameters_from_yaml("resources/agent_parameters.yaml")
-        self.schema = LLMAgent._schema
-        self.parameters = LLMAgent._parameters
+        if not SingleAgent._schema:
+            SingleAgent._schema = load_schema_from_yaml("resources/single_agent/notes_output_schema.yaml")
+        if not SingleAgent._parameters:
+            SingleAgent._parameters = load_parameters_from_yaml("resources/single_agent/agent_parameters.yaml")
+        self.schema = SingleAgent._schema
+        self.parameters = SingleAgent._parameters
         # scoring_metrics is now always sourced from schema
         self.scoring_metrics = self.schema.get('scoring_metrics', {})
         # Use parameters for agent config
@@ -736,6 +737,6 @@ if __name__ == "__main__":
     # Example usage
     notes = MemoryManager.load_from_md("docs/examples/example_notes.csv")
     user_memory = MemoryManager.load_from_md("docs/examples/example_user_memory.md")
-    agent = LLMAgent(notes, user_memory)
+    agent = SingleAgent(notes, user_memory)
     output = agent.run()
     user_print(output.model_dump_json(indent=2), color=CYAN) 

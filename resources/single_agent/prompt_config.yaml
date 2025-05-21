@@ -69,19 +69,19 @@ sections:
     enabled: true
     comment: "[Operational Protocol] Unified output schema and field meanings (from YAML)."
     params:
-      schema_file: resources/notes_output_schema.yaml
+      schema_file: resources/single_agent/notes_output_schema.yaml
   # --- OPERATIONAL PROTOCOL: CLASSIFICATION ---
   - name: classification
     enabled: true
     comment: "[Operational Protocol] Allowed entity types and intents (from YAML). Uses the file specified in params."
     params:
-      classification_file: resources/entity_types_and_intents.yaml
+      classification_file: resources/single_agent/entity_types_and_intents.yaml
   # --- OPERATIONAL PROTOCOL: SCORING & CLARIFICATION GUIDELINES ---
   - name: scoring_guidelines
     enabled: true
     comment: "[Operational Protocol] Note scoring/clarification triggers for evaluation. Loaded from the schema file."
     params:
-      schema_file: resources/notes_output_schema.yaml
+      schema_file: resources/single_agent/notes_output_schema.yaml
   - name: clarification_protocol
     enabled: true
     comment: "When/how to ask for clarification."
