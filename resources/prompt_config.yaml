@@ -82,6 +82,36 @@ sections:
     comment: "[Operational Protocol] Note scoring/clarification triggers for evaluation. Loaded from the schema file."
     params:
       schema_file: resources/notes_output_schema.yaml
+  - name: clarification_protocol
+    enabled: true
+    comment: "When/how to ask for clarification."
+    custom_text: |
+      ## 🔍 Clarification Protocol
+
+      If interpretation is uncertain, or if you are not sure which tool to use, or how to use a tool, you MUST always ask the user for clarification using the ask_user tool BEFORE attempting any other tool or providing a final answer.
+      - Generate clarification questions ONLY IF:
+        - confidence_score < 70, OR
+        - ambiguity_score > 60, OR
+        - the tool usage or required parameters are ambiguous in any way.
+
+      If clarification is needed:
+      - List all questions in a single message, numbered:
+        ```
+        1: [question]
+        2: [question]
+        ```
+      - Ask the user to reply with:
+        ```
+        1: [answer]
+        2: [answer]
+        ```
+
+      If answers are received:
+      - If the user's answer is incomplete, ambiguous, or does not resolve all uncertainty, ask follow-up clarification questions, up to the maximum allowed rounds.
+      - Only finalize if you are confident all ambiguity is resolved, or the maximum clarification rounds have been reached.
+      - Re-interpret the note with updated understanding.
+      - Repeat for up to **2 clarification rounds maximum**.
+      - If ambiguity persists, finalize output and use `UNDEFINED` or `MISSING_` flags.
   # --- OPERATIONAL PROTOCOL: PARAMETERS & VALIDATION ---
   - name: parameter_explanations
     enabled: true
@@ -159,9 +189,31 @@ sections:
   - name: memory_update
     enabled: true
     comment: "How to update long-term memory."
+    custom_text: |
+      ## 🧠 Memory Update Rules
+
+      For every finalized interpretation:
+      - Only add memory points that are likely to be useful for future note interpretation or long-term context.
+      - Only add a memory point if it is a general, recurring pattern, user preference, or clarified shorthand that will help interpret future notes.
+      - Do NOT add memory points that are specific to the current note or session, or that simply repeat the note's content.
+      - Do NOT add a memory point just because a note was interpreted; most notes should NOT result in a new memory point.
+      - Do NOT add a memory point for a one-off, non-recurring note, even if it was clarified.
+      - It is normal and correct for new_memory_points to be empty most of the time.
+      - If no such general insight is found, leave new_memory_points empty.
+      - If you are not sure the pattern is general and recurring, leave new_memory_points empty.
+      - Focus on general patterns, recurring terms, user preferences, or clarified shorthand that are likely to recur in future notes.
+      - Use natural language in bullet-point format (`* ...`)
+      - Never rewrite or delete past memory – this log is append-only.
   - name: memory_point_examples
     enabled: true
     comment: "Examples of memory points."
+    custom_text: |
+      ## 📘 Memory Point Examples
+
+      * The user often refers to their main project as 'the project' without further detail.
+      * The user prefers to write tasks starting with a verb.
+      * The user uses the shorthand '???' to denote an idea that needs further elaboration (if this is a recurring pattern).
+      # (Most notes do NOT result in a memory point. Only add a memory point if it is general and recurring.)
 
   # ------------ INPUT CONTEXT & FINALIZATION ------------
   - name: input_context
