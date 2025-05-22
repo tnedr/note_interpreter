@@ -4,6 +4,8 @@ import os
 import json
 from langchain_openai import ChatOpenAI
 from note_interpreter.prompt_builder import PromptBuilder
+from note_interpreter.log import log
+import logging
 
 # Helper: default tool definition (példa)
 def get_default_tools():
@@ -18,6 +20,33 @@ def get_default_tools():
             name="score_notes",
             description="Assigns clarity_score to each note.",
             schema={"type": "object", "properties": {"clarity_score": {"type": "integer"}}}
+        ),
+        ToolDefinition(
+            name="finalize_notes",
+            description="Returns the final structured output for all notes.",
+            schema={
+                "type": "object",
+                "properties": {
+                    "notes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "raw_text": {"type": "string"},
+                                "clarified_text": {"type": "string"},
+                                "clarity_score": {"type": "integer"},
+                                "clarification_history": {"type": "array", "items": {"type": "object"}}
+                            },
+                            "required": ["raw_text", "clarified_text", "clarity_score", "clarification_history"]
+                        }
+                    },
+                    "clarification_qas": {
+                        "type": "array",
+                        "items": {"type": "object"}
+                    }
+                },
+                "required": ["notes", "clarification_qas"]
+            }
         )
     ]
 
@@ -65,6 +94,12 @@ class ClarifyAndScoreAgent:
         )
         # Futtatás
         output = agent_core.handle_user_message("Proceed")
+        # Log the raw output for debugging/inspection
+        import json as _json
+        try:
+            log.info("Raw agent_core output: " + _json.dumps(output, ensure_ascii=False, indent=2))
+        except Exception:
+            log.info(f"Raw agent_core output (non-serializable): {output}")
         # Output validáció és mapping
         return self._map_and_validate_output(output)
 
