@@ -1,5 +1,20 @@
 # Multi-Agent Jegyzetértelmező – Master System Plan
 
+## Verzió: 1.2.1
+- 2025-05-22: Validator Agent koncepció bevezetve
+- 2025-05-21: Adatstruktúrák optimalizált sorrendje hozzáadva
+- 2025-05-20: Clarify loop és iteration contract pontosítása
+
+## 0. A dokumentum célja
+
+Ez a dokumentum a Multi-Agent Jegyzetértelmező rendszer specifikációját tartalmazza. Fő célja, hogy:
+
+- vezérfonalként szolgáljon az implementációhoz (promptok, agentek, adatstruktúrák),
+- biztosítsa a pipeline egységes működését és iterálhatóságát,
+- meghatározza a modularitás, bővíthetőség és tesztelhetőség alapelveit.
+
+Ez a dokumentum nem helyettesíti a futó kódot, hanem azt egészíti ki koncepcióval, specifikációval és döntési dokumentációval.
+
 ## 1. Áttekintés és cél
 A rendszer célja, hogy a felhasználó jegyzeteit több, egymásra épülő, specializált AI agent dolgozza fel, mindegyik egy-egy jól körülhatárolt feladatot lát el. A pipeline addig iterál, amíg minden jegyzet elég érthető, majd véglegesíti és bővíti a memóriát. A terv az alternatív (legfrissebb) architektúrát követi, de beépíti a korábbi tervek bővíthetőségi, prompt, tesztelési és workflow tapasztalatait is.
 
@@ -45,6 +60,19 @@ A rendszer célja, hogy a felhasználó jegyzeteit több, egymásra épülő, sp
 - Az agent stateless: minden iteráció új hívás, minden állapotváltozást a pipeline (orchestrator) és a felhasználói válaszok adnak meg.
 - A pipeline gondoskodik róla, hogy a user válaszait a megfelelő id-jú jegyzethez illessze és a következő körre újra beadja.
 
+### 3.4 pipeline_config.yaml példa
+```yaml
+clarify_score_threshold: 80
+max_rounds: 3
+agents:
+  - name: ClarifyAndScoreAgent
+    model: gpt-4o
+  - name: HumanAnswerCollector
+    mode: UI
+  - name: NoteFinalizerAgent
+    model: gpt-4-turbo
+```
+
 ---
 
 ## 4. Adatstruktúra, input/output sémák
@@ -80,40 +108,24 @@ Példa:
 
 Ez a struktúra tükrözi azt a kognitív sorrendet, ahogy egy ember vagy agent feldolgozza a jegyzetet.
 
-### 4.2 Példa input (YAML)
-```yaml
-- id: "note_1"
-  raw_text: "email Sarah"
-  clarification_history: []
-  long_term_memory:
-    - "Sarah is Tamas's assistant"
-    - "Emails usually refer to follow-ups from Monday meetings"
+### 4.2 Python class definíciók
+```python
+@dataclass
+class NoteInput:
+    id: str
+    raw_text: str
+    clarification_history: list[dict[str, str]]
+    long_term_memory: list[str] = field(default_factory=list)
 
-- id: "note_2"
-  raw_text: "budget numbers"
-  clarification_history:
-    - question: "Which department?"
-      answer: "Marketing"
-  long_term_memory:
-    - "Budget entries are usually quarterly"
+@dataclass
+class NoteOutput:
+    id: str
+    clarified_text: str
+    clarity_score: int
+    new_questions: list[str]
 ```
 
-### 4.3 Példa output (YAML) (pontosított)
-```yaml
-- id: "note_1"
-  raw_text: "email Sarah"
-  clarified_text: "Send a follow-up email to Sarah regarding the Monday meeting"
-  clarity_score: 92
-  new_questions: []
-
-- id: "note_2"
-  raw_text: "budget numbers"
-  clarified_text: ""
-  clarity_score: 50
-  new_questions:
-    - "Which quarter's budget are you referring to?"
-```
-➡️ Fontos: ha nincs elég információ, a `clarified_text` lehet üres string.
+Ezek a struktúrák könnyen átvihetők JSON schema-vá vagy OpenAPI definícióvá is.
 
 ---
 
@@ -191,4 +203,79 @@ Ez a struktúra tükrözi azt a kognitív sorrendet, ahogy egy ember vagy agent 
 ## 8. Referenciák, források
 - AI_multi_agent_alt_plan.md (legfrissebb architektúra)
 - AI_multi_agent_build_plan.md (workflow, tesztelés, prompt tuning)
-- multi_agent_system_design.md (prompt szekciók, bővíthetőség) 
+- multi_agent_system_design.md (prompt szekciók, bővíthetőség)
+
+## 9. Fogalomjegyzék
+
+- **clarified_text** – A lehető legjobb, véglegesített, egyértelműen értelmezett változata a jegyzetnek.
+- **clarity_score** – Egy 0–100 skálán kifejezett metrika, ami az értelmezhetőség fokát méri.
+- **new_questions** – Csak akkor van, ha a clarity_score nem elég magas; ezek tisztázó kérdések a user felé.
+- **clarification_history** – Minden Q&A logikai előzménye, ami segít újra lefuttatni az értelmezést.
+- **threshold** – Az a minimális clarity_score, ami felett a jegyzet értelmezettnek minősül.
+
+---
+
+## 10. Tesztelési és validálási sablonok
+
+### 10.1 Unit test struktúra
+
+- `test_clarify_score_below_threshold_triggers_questions()`
+- `test_idempotent_behavior_with_same_input()`
+- `test_empty_clarified_text_requires_question()`
+
+### 10.2 Prompt regression példa
+
+Input note:
+```yaml
+raw_text: "talk to boss"
+clarification_history: []
+long_term_memory: []
+```
+Elvárt kérdés: "About what topic do you want to talk to your boss?"
+
+Ha nem jelenik meg, prompt regression hiba.
+
+---
+
+## 11. Prompt verziózás és visszamenőleges kompatibilitás
+
+- Minden prompt sablonnak legyen `version` mezője (pl. `prompt_config_v1.2.yaml`).
+- Prompt változtatás előtt `prompt_regression_test()` kötelező.
+- Prompt-változások hatását külön `changelog` szakasz dokumentálja.
+
+---
+
+## 12. Prompt könyvtár és struktúra
+
+📘 Koncepció: Minden agenthez külön prompt könyvtár, verziózott fájlokkal.
+
+```plaintext
+prompts/
+  clarify_agent/
+    prompt_v1.0.yaml
+    prompt_v1.1.yaml
+  finalizer_agent/
+    prompt_v1.0.yaml
+```
+
+- Minden prompt fájl tartalmazza: intro, constraints, output schema, scoring_guidelines, clarification_protocol, stb.
+- Prompt version minden fájlban kötelező.
+
+---
+
+## 13. Várható hibák és fallback stratégiák
+
+- 🛑 Ha egy agent valid JSON helyett plain textet ad vissza → log error, skip
+- ❌ Ha `clarified_text == "" && new_questions == []` → warning és review agent trigger
+- 🔁 Ha egy note három kör után is alacsony score-t kap → archive vagy manual review
+
+---
+
+## 14. Fejlesztési státusz és TODO
+
+- [x] ClarifyAndScoreAgent prompt v1.0 kész
+- [ ] Prompt regression test framework kialakítása
+- [ ] Streamlit UI prototípus
+- [ ] HumanAnswerCollector LangChain integráció
+
+--- 
