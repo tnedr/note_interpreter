@@ -1,5 +1,7 @@
 # AI-Human Project Journal
 
+- Migrated all agents and the demo to use the new modular PromptBuilder architecture, removed SystemPromptBuilder, and updated documentation and code to require prompt building externally for full extensibility.
+- now 2024-06-14
 - now 2025-05-17
 - Started MVP 2 implementation: designed and implemented the pilot LLM agent (class, schema, test, and example usage) as the first step.
 - Added a pilot micro-project (minimal LLM agent prototype) as a required first step in MVP 2 to validate structured LLM output before full integration.

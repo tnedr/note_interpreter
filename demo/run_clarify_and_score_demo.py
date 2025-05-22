@@ -1,7 +1,7 @@
 # pipenv run python -m demo.run_clarify_and_score_demo
 
 from note_interpreter.clarify_and_score_agent import ClarifyAndScoreAgent
-from note_interpreter.llm_agent import SystemPromptBuilder
+from note_interpreter.prompt_builder import PromptBuilder
 from note_interpreter.log import log
 
 # Logolás beállítása konzolra, debug szinten (singleton)
@@ -21,9 +21,14 @@ user_memory = [
 clarification_history = []
 
 # Prompt generálás a configból
-prompt = SystemPromptBuilder.build(
-    memory=user_memory,
-    notes=notes,
+context = {
+    "notes": notes,
+    "user_memory": user_memory,
+    "clarification_history": clarification_history,
+    # Add any other required context fields here
+}
+prompt = PromptBuilder.build(
+    context=context,
     config_path="resources/clarify_and_score_agent/prompt_config.yaml"
 )
 log.info("Generated prompt:\n" + prompt)

@@ -12,7 +12,6 @@ import datetime
 from note_interpreter.colors import RESET, BOLD, CYAN, YELLOW, MAGENTA, BLUE, GREEN, RED, WHITE, BANNER_COLORS
 from note_interpreter.log import log
 from note_interpreter.user_output import user_print
-from note_interpreter.prompt_builder import SystemPromptBuilder
 
 class MemoryManager:
     """Handles loading and saving long-term memory."""
@@ -106,14 +105,14 @@ class SingleAgent:
         self.agent_core = AgentCore(
             llm=self.llm,
             tools=self.tools,
-            system_prompt=SystemPromptBuilder.build(
-                self.user_memory,
-                self.notes,
-                classification_config=self.classification_config,
-                schema=self.schema,
-                parameters=self.parameters,
-                scoring_metrics=self.scoring_metrics
-            ),
+            # system_prompt=SystemPromptBuilder.build(
+            #     self.user_memory,
+            #     self.notes,
+            #     classification_config=self.classification_config,
+            #     schema=self.schema,
+            #     parameters=self.parameters,
+            #     scoring_metrics=self.scoring_metrics
+            # ),
             shared_context=self.shared_context,
             debug_mode=self.debug_mode,
             logger=log,
@@ -170,22 +169,22 @@ class SingleAgent:
         try:
             for round_num in range(self.max_clarification_rounds):
                 # Build fresh system prompt with all context and Q&A
-                system_prompt = SystemPromptBuilder.build(
-                    self.user_memory,
-                    self.notes,
-                    classification_config=self.classification_config,
-                    extra_context={"clarification_qas": clarification_qas},
-                    schema=self.schema,
-                    parameters=self.parameters,
-                    scoring_metrics=self.scoring_metrics
-                )
+                # system_prompt = SystemPromptBuilder.build(
+                #     self.user_memory,
+                #     self.notes,
+                #     classification_config=self.classification_config,
+                #     extra_context={"clarification_qas": clarification_qas},
+                #     schema=self.schema,
+                #     parameters=self.parameters,
+                #     scoring_metrics=self.scoring_metrics
+                # )
                 # Zero-shot: only system + user message
                 conversation_history = [
-                    {"role": "system", "content": system_prompt},
+                    {"role": "system", "content": "Prompt must be built externally using PromptBuilder and passed in if needed."},
                     {"role": "user", "content": "Proceed"}
                 ]
                 if self.debug_mode:
-                    log.debug(f"\n-------- SYSTEM PROMPT (round {round_num+1}) --------\n{system_prompt}\n------------------------------------------\n")
+                    log.debug(f"\n-------- SYSTEM PROMPT (round {round_num+1}) --------\nPrompt must be built externally using PromptBuilder and passed in if needed.\n------------------------------------------\n")
                 # Pass zero-shot conversation to AgentCore
                 response = self.agent_core.invoke_with_message_list(conversation_history)
                 if self.debug_mode:
@@ -241,21 +240,21 @@ class SingleAgent:
             log.warning("Maximum clarification rounds reached. Finalizing with placeholders if needed.")
             # Build a final system prompt with all Q&A and a note about max rounds
             final_note = f"You have reached the maximum of {self.max_clarification_rounds} clarification rounds. Please finalize your output, even if some fields are UNDEFINED. Number of clarification Q&A rounds: {len(clarification_qas)}."
-            system_prompt = SystemPromptBuilder.build(
-                self.user_memory,
-                self.notes,
-                classification_config=self.classification_config,
-                extra_context={"clarification_qas": clarification_qas, "finalization_note": final_note},
-                schema=self.schema,
-                parameters=self.parameters,
-                scoring_metrics=self.scoring_metrics
-            )
+            # system_prompt = SystemPromptBuilder.build(
+            #     self.user_memory,
+            #     self.notes,
+            #     classification_config=self.classification_config,
+            #     extra_context={"clarification_qas": clarification_qas, "finalization_note": final_note},
+            #     schema=self.schema,
+            #     parameters=self.parameters,
+            #     scoring_metrics=self.scoring_metrics
+            # )
             conversation_history = [
-                {"role": "system", "content": system_prompt},
+                {"role": "system", "content": "Prompt must be built externally using PromptBuilder and passed in if needed."},
                 {"role": "user", "content": "Proceed"}
             ]
             if self.debug_mode:
-                log.debug(f"\n-------- FINAL SYSTEM PROMPT (max rounds reached) --------\n{system_prompt}\n------------------------------------------\n")
+                log.debug(f"\n-------- FINAL SYSTEM PROMPT (max rounds reached) --------\nPrompt must be built externally using PromptBuilder and passed in if needed.\n------------------------------------------\n")
             response = self.agent_core.invoke_with_message_list(conversation_history)
             if self.debug_mode:
                 log.debug(f"\n-------- FINAL LLM RESPONSE (max rounds reached) --------\n{str(response)}\n------------------------------\n")

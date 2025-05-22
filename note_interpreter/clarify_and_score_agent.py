@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Optional
 import os
 import json
 from langchain_openai import ChatOpenAI
+from note_interpreter.prompt_builder import PromptBuilder
 
 # Helper: default tool definition (példa)
 def get_default_tools():
@@ -20,21 +21,13 @@ def get_default_tools():
         )
     ]
 
-# Helper: prompt betöltése
-def load_default_prompt():
-    prompt_path = os.path.join("resources", "clarify_and_score_agent", "prompt.txt")
-    if os.path.exists(prompt_path):
-        with open(prompt_path, "r", encoding="utf-8") as f:
-            return f.read()
-    # Fallback: default string
-    return "# ClarifyAndScoreAgent system prompt\nYou are an agent that clarifies notes and assigns scores."
-
 class ClarifyAndScoreAgent:
     """
     Context-driven agent wrapper, master plan architektúra szerint.
     Minden context explicit paraméterként megy át, nincs implicit state.
+    The prompt must be built using PromptBuilder and passed in at instantiation.
     """
-    def __init__(self, prompt: Optional[str] = None, tools: Optional[List[ToolDefinition]] = None, config: Optional[Dict[str, Any]] = None, prompt_version: Optional[str] = None, debug_mode: bool = False):
+    def __init__(self, prompt: str, tools: Optional[List[ToolDefinition]] = None, config: Optional[Dict[str, Any]] = None, prompt_version: Optional[str] = None, debug_mode: bool = False):
         self.config = config or {}
         self.prompt_version = prompt_version
         self.debug_mode = debug_mode
@@ -45,8 +38,8 @@ class ClarifyAndScoreAgent:
         self.llm = ChatOpenAI(model=model, openai_api_key=openai_api_key, temperature=temperature)
         # Toolok betöltése
         self.tools = tools if tools is not None else get_default_tools()
-        # Prompt betöltése
-        self.prompt = prompt if prompt is not None else load_default_prompt()
+        # Prompt must be provided (built with PromptBuilder)
+        self.prompt = prompt
 
     def run(self, notes: List[str], user_memory: List[str], clarification_history: Optional[List[Dict[str, Any]]] = None, pipeline_state: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """
