@@ -10,15 +10,14 @@ Ez a dokumentum lépésről lépésre tartalmazza a master plan implementációs
 
 ---
 
-## 1. Előkészítés, baseline rögzítése
+## Kiemelt következő lépések (AgentCore-architektúra)
 
-- [ ] **Kód- és dokumentáció snapshot**: Fagyaszd le a jelenlegi működő pipeline-t (branch, tag, backup).
-- [ ] **Tesztkörnyezet**: Ellenőrizd, hogy minden fő teszt (unit, integrációs, regression) zöld.
-- [ ] **Master plan review**: Minden fejlesztő olvassa át a master plant, különös tekintettel a pipeline lépésekre, agent szerepekre, adatstruktúrákra, prompt szekciókra.
-
-### Context handling
-- **Mentés**: A jelenlegi user memory, notes, config, prompt verziók snapshotolása.
-- **Logolás**: Minden baseline context (input, memory, config) legyen logolva, hogy a regressziók könnyen visszakereshetők legyenek.
+- [ ] Töröld a base_agent.py-t, mert a modern architektúrában az AgentCore és a context-driven design váltja ki.
+- [ ] Minden új agent (ClarifyAndScoreAgent, NoteFinalizerAgent, stb.) legyen vékony wrapper, amely az AgentCore-t példányosítja a megfelelő toolokkal, prompttal, contexttel.
+- [ ] Az agentek run metódusa csak a context forwardolásáért, validációért, output mappingért feleljen.
+- [ ] A pipeline/orchestrator minden agentet explicit példányosítson, és a contextet mindig átadja.
+- [ ] Az agentek outputját, state-jét, context változásait logolja, auditálja.
+- [ ] Frissítsd a projekt journal-t, hogy a BaseAgent törölve lett, és minden agent az AgentCore köré szerveződik.
 
 ---
 
@@ -129,5 +128,38 @@ Ez a dokumentum lépésről lépésre tartalmazza a master plan implementációs
 - [ ] Minden promptba, tesztbe, regression snapshotba a teljes contextet injektálni kell.
 - [ ] Minden hiba, warning, manual review esetén a context snapshotot el kell menteni.
 - [ ] Új agent, prompt, config, vagy pipeline változtatásnál a context contractot dokumentálni kell.
+
+---
+
+## 12. Tesztelési stratégia és új tesztek (útmutató)
+
+> **Megjegyzés:** A `resources/single_agent` foldert egyelőre ne archiváld, maradjon meg referenciának és összehasonlítási alapnak az új architektúra bevezetése alatt. A tesztek implementálása az új agentek, orchestrator és context handling után következzen, amikor már stabil az új pipeline.
+
+### Új tesztek, amikre szükség lesz:
+
+- [ ] **Agent unit tesztek**
+  - ClarifyAndScoreAgent: input/output contract, clarification loop, context injection
+  - NoteFinalizerAgent: enrichment, memory update, output schema
+  - HumanAnswerCollector: user Q&A kezelés, context mapping
+- [ ] **Orchestrator tesztek**
+  - Iterációs logika, pipeline state váltás, context forwarding
+- [ ] **Context handling tesztek**
+  - Minden context változás (memory, clarification_history, state) helyes logolása, audit trail
+- [ ] **Prompt regression tesztek**
+  - Prompt változás után snapshot összehasonlítás (regression_tests/)
+- [ ] **End-to-end pipeline tesztek**
+  - Teljes pipeline futás különböző inputokkal (clear, ambiguous, unresolved notes)
+- [ ] **Fallback és warning tesztek**
+  - Hibás output, max_rounds, manual review, UNDEFINED mezők kezelése
+
+#### Példák
+- `test_clarify_and_score_agent_contract()`
+- `test_note_finalizer_enrichment()`
+- `test_orchestrator_iteration_and_context()`
+- `test_context_audit_trail()`
+- `test_prompt_regression_case_001()`
+- `test_pipeline_fallback_behavior()`
+
+> **Javaslat:** A régi single_agent teszteket csak akkor töröld vagy migráld, ha az új architektúra minden fő funkciója már le van fedve új tesztekkel, és a pipeline stabilan működik.
 
 --- 
