@@ -1,0 +1,10 @@
+notes:
+  - continue plan
+  - email John re demo
+  - ???
+user_memory:
+  - "* User is working on a new project called NoteInterpreter."
+  - "* User prefers concise, actionable notes."
+clarification_history: []
+threshold: 70
+max_rounds: 2 
