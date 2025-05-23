@@ -61,7 +61,7 @@ class ClarifyAndScoreAgent:
         self.prompt_version = prompt_version
         self.debug_mode = debug_mode
         # LLM példányosítás (configból vagy default)
-        model = self.config.get("model", "gpt-4o")
+        model = self.config.get("model", "gpt-4.1-mini")
         temperature = self.config.get("temperature", 0.0)
         openai_api_key = os.getenv("OPENAI_API_KEY")
         self.llm = ChatOpenAI(model=model, openai_api_key=openai_api_key, temperature=temperature)

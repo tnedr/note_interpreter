@@ -38,7 +38,7 @@ Leverage LangChain's `with_structured_output()` to ensure the LLM's responses co
 ```python
 from langchain.chat_models import ChatOpenAI
 
-llm = ChatOpenAI(model="gpt-4", openai_api_key="your-api-key")
+llm = ChatOpenAI(model="gpt-4.1-mini", openai_api_key="your-api-key")
 structured_llm = llm.with_structured_output(LLMOutput)
 ```
 

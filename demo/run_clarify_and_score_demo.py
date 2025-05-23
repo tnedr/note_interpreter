@@ -17,7 +17,6 @@ log_file_path = os.path.join(
 log.__init__(level="debug", log_file=log_file_path, to_console=True)
 # A log file elérési útja: logs/clarify_and_score_demo_YYYY-MM-DD_HH-MM-SS.log
 
-# Valós inputok
 notes = [
     "continue plan",
     "email John re demo",
