@@ -1,11 +1,28 @@
 # Prompt Regression & Development Lab – Mini-projekt cél és mappa szerepe
 
-Ez a mappa egy önálló, iteratív promptfejlesztő és regressziós tesztkörnyezet a note_interpreter projekthez. Célja, hogy:
-- Gyorsan lehessen új promptokat fejleszteni, verziózni és tesztelni különböző inputokra, user memory-ra és clarification history-re.
-- Automatizált regressziós tesztekkel biztosítsa, hogy minden promptverzió visszafelé kompatibilis és minőségi maradjon.
-- Támogassa a prompt-alapú ügynökök (pl. ClarifyAndScoreAgent) fejlesztését, edge case-ek és tipikus felhasználói szcenáriók lefedésével.
+Ez a mappa célja, hogy gyors, iteratív promptfejlesztést és -tesztelést tegyen lehetővé bármely LLM-alapú ügynök (agent) számára. A fő cél, hogy a promptok minél gyorsabban kipróbálhatók, összehasonlíthatók és továbbfejleszthetők legyenek, valósághű inputokkal és automatizált regressziós tesztekkel. A Promptfoo és LangSmith csak technikai eszközök ehhez a workflow-hoz.
 
-A mappa tartalmaz prompt sablonokat, teszt inputokat, automatizált tesztfuttató szkripteket, valamint Promptfoo és LangSmith integrációt a gyors iteráció és minőségbiztosítás érdekében.
+## Tesztelési architektúra és workflow
+
+A promptfejlesztés és -tesztelés folyamata a következő lépésekből áll:
+
+1. **Promptverziók kezelése:**  
+   Minden ügynök promptja külön YAML fájlban, verziózva található a `prompts/` mappában.
+
+2. **Teszt inputok:**  
+   Valósághű, változatos input YAML-ok a `test_inputs/` mappában (pl. notes, user memory, clarification history).
+
+3. **Automatizált tesztfuttatás:**  
+   A `run_prompt_tests.py` script minden promptverziót minden inputtal lefuttat, és naplózza az eredményeket.  
+   - A script a PromptBuilder-t használja a prompt generálásához.
+   - Az LLM-et (pl. OpenAI GPT-4) hívja meg a generált prompttal.
+   - Az outputokat logolja, opcionálisan összeveti elvárt eredményekkel.
+
+4. **Promptfoo és LangSmith integráció:**  
+   Ezek az eszközök lehetővé teszik a promptok deklaratív, automatizált tesztelését, valamint a webes playground használatát gyors iterációhoz.
+
+5. **Eredmények és regresszió:**  
+   Minden promptverzióra és inputra visszamenőleg is futnak a tesztek, így azonnal látható, ha egy új promptverzió visszalépést okoz (regresszió).
 
 ## Promptfoo használata
 
