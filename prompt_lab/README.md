@@ -1,10 +1,12 @@
-# 🧪 Prompt Regression & Development Lab
+# Prompt Regression & Development Lab
 
-## Overview
+## System Overview
 
-This project is a **modular, testable, and iterative framework** for developing and validating prompts used by LLM-based agents. It is designed as a *subproject* within a larger AI agent development ecosystem, and its goal is to ensure that prompts evolve in a controlled, regression-tested manner.
+### Overview
 
-**This lab is designed for _stepwise, multi-turn prompt development_: you can build, test, and version agents that interact with the user in multiple rounds, asking clarifying questions if needed, not just static one-shot prompts.**
+This project is a **modular, testable, and iterative framework** for developing and validating prompts used by LLM-based agents. It is designed as a subproject within a larger AI agent development ecosystem, and its goal is to ensure that prompts evolve in a controlled, regression-tested manner.
+
+**This lab is designed for stepwise, multi-turn prompt development: you can build, test, and version agents that interact with the user in multiple rounds, asking clarifying questions if needed, not just static one-shot prompts.**
 
 This lab provides the infrastructure to:
 - Develop prompts in a structured and versioned way.
@@ -13,9 +15,11 @@ This lab provides the infrastructure to:
 - Analyze and log the resulting outputs.
 - Compare versions to detect regressions or improvements.
 
+The main goal is to make all LLM-based agent prompts easy to develop, test, and compare, using realistic inputs and automated regression testing.
+
 ---
 
-## Project Goals
+### Project Goals
 
 - 🧠 Enable **prompt engineering as a software discipline**.
 - 🔁 Facilitate **prompt versioning and regression detection**.
@@ -26,7 +30,7 @@ This lab provides the infrastructure to:
 
 ---
 
-## Project Structure
+### Project Structure
 
 ```plaintext
 prompt-lab/
@@ -57,7 +61,7 @@ See also: `docs/TESTING_MASTER_GUIDE.md`
 
 ---
 
-## Core Workflow
+### Core Workflow
 
 1. 🛠 **Define stepwise agent behavior** – not just static prompts, but multi-turn, clarification-capable agents.
 2. 🧱 **Build Prompt** – Use `PromptBuilder` to load and assemble prompt from YAML
@@ -65,56 +69,19 @@ See also: `docs/TESTING_MASTER_GUIDE.md`
 4. 📤 **Input & Output** – Feed test input (note, memory, etc.), including multi-step clarification scenarios
 5. 🔬 **Evaluate Behavior** – Optionally define expected patterns or run diffing and scoring
 
-**The workflow supports the development and testing of multi-step, clarification-capable agent pipelines.**
+The workflow supports the development and testing of multi-step, clarification-capable agent pipelines.
 
 ---
 
-## Testing Architecture & Workflow
+### Philosophy
 
-The prompt development and testing process consists of the following steps:
-
-1. **Prompt versioning:**  
-   Each agent's prompts are stored as separate YAML files, versioned in the `prompts/` folder.
-2. **Test inputs:**  
-   Realistic, diverse input YAMLs in the `test_inputs/` folder (e.g., notes, user memory, clarification history, multi-step examples).
-3. **Automated test execution:**  
-   The `run_prompt_tests.py` script runs every prompt version with every input and logs the results.  
-   - The script uses PromptBuilder to generate the prompt.
-   - The LLM (e.g., OpenAI GPT-4) is called with the generated prompt.
-   - Outputs are logged and optionally compared to expected results.
-4. **Promptfoo and LangSmith integration:**  
-   These tools enable declarative, automated prompt testing and a web playground for rapid iteration.
-5. **Results and regression:**  
-   Tests are run for all prompt versions and inputs, so regressions are immediately visible.
+Don't build monolith prompts. Build evolving, testable, **stepwise**, intelligent components — just like great code.
 
 ---
 
-## Reusable Core Libraries
+## Usage & Developer Guide
 
-| Module           | Description                                      |
-|------------------|--------------------------------------------------|
-| `prompt_builder` | Builds prompt strings from versioned YAML files |
-| `agent_core`     | Minimal agent interface for executing prompts   |
-| `logging_lib`    | Logs test results, diffs, and evaluations       |
-
----
-
-## Example Test Case Structure
-
-```yaml
-agent: clarifier
-prompt_version: v1
-input:
-  note: "User asked about magnesium absorption"
-  memory: "Known deficiencies"
-  # clarification_history: ["Does the user have gut issues?"]
-expected:
-  output_contains: ["magnesium", "absorption", "gut"]
-```
-
----
-
-## How To Run
+### How To Run
 
 1. Install dependencies:
    ```sh
@@ -154,9 +121,8 @@ expected:
 
 ---
 
-## Philosophy
-
-Don't build monolith prompts. Build evolving, testable, **stepwise**, intelligent components — just like great code.
+## Reference
+See `docs/TESTING_MASTER_GUIDE.md` for detailed testing principles and workflow.
 
 ---
 
