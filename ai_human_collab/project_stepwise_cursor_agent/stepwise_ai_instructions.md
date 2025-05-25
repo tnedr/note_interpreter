@@ -9,9 +9,8 @@ Ez a dokumentum egy sablont és konkrét utasításokat tartalmaz arra, hogyan l
 
 > **Utasítás az AI coding assistantnek:**
 > 
-> 1. Csak az alábbi lépést hajtsd végre, mást ne módosíts, ne refaktorálj, ne írj tesztet, ne változtass más fájlt!
-> 2. A lépés végrehajtása után részletesen írd le, pontosan mit csináltál (fájlok, sorok, funkciók, stb.).
-> 3. Állj meg, és várj további utasításra, mielőtt bármilyen újabb lépést végrehajtanál!
+> 1. A feladatot lepesenkent hajtsd vegre, mást ne módosíts, ne refaktorálj, ne írj tesztet, ne változtass más fájlt!
+> 2. A lépés végrehajtása után részletesen írd le, egy journal_now.md nevu fileban, hogy az adott lepesben pontosan mit csináltál (fájlok, sorok, funkciók, stb.).
 > 4. Ne hajts végre több lépést egyszerre, ne próbálj optimalizálni vagy előre dolgozni!
 
 ## Példa prompt

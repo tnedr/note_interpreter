@@ -1,2 +1,3 @@
-- Hozzáadtam az '1. ujsor' sort az ai_human_collab/example.txt fájl végéhez a stepwise AI teszt első lépéseként. 
+- Az '1. ujsor' sort hozzáadtam az ai_human_collab/project_stepwise_cursor_agent/example.txt fájl végéhez a stepwise AI coding test első lépéseként. 
 - A második lépésben beszúrtam a '2. ujsor' sort az ai_human_collab/example.txt fájl végére. 
+- Elolvastam a project_stepwise_cursor_agent mappában található összes fájlt, és összefoglaltam a tartalmukat. 
