@@ -1,4 +1,22 @@
-# Prompt Regression & Development Lab – Mini-projekt cél és mappa szerepe
+# Prompt Lab – Modular Prompt & Agent Testing Environment
+
+Ez a mappa egy moduláris, bővíthető prompt- és agent-tesztelési labor, amely támogatja a gyors iterációt, verziózást, regressziós tesztelést és dokumentációt. A cél, hogy minden LLM-alapú ügynök (agent) promptjai könnyen fejleszthetők, tesztelhetők és összehasonlíthatók legyenek.
+
+## Főbb alkönyvtárak
+
+- `agents/` – Ügynök-specifikus promptok, verziók, metaadatok
+- `libs/` – Közös segédfüggvények, utility modulok (pl. PromptBuilder, Logger)
+- `test_cases/` – Input/output tesztesetek, elvárt eredmények
+- `results/` – Tesztfuttatások eredményei, logok, diffek
+- `scripts/` – Tesztfuttató, kiértékelő, automatizáló szkriptek
+- `tests/` – Unit tesztek az infrastruktúrához
+- `configs/` – Tool konfigurációk (pl. promptfoo.yaml, langsmith, .env)
+- `docs/` – Architektúra, workflow, best practice-ek, master guide
+
+## Referencia
+A részletes tesztelési elveket és workflow-t lásd: `docs/TESTING_MASTER_GUIDE.md`
+
+## Prompt Regression & Development Lab – Mini-projekt cél és mappa szerepe
 
 Ez a mappa célja, hogy gyors, iteratív promptfejlesztést és -tesztelést tegyen lehetővé bármely LLM-alapú ügynök (agent) számára. A fő cél, hogy a promptok minél gyorsabban kipróbálhatók, összehasonlíthatók és továbbfejleszthetők legyenek, valósághű inputokkal és automatizált regressziós tesztekkel. A Promptfoo és LangSmith csak technikai eszközök ehhez a workflow-hoz.
 
