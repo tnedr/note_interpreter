@@ -61,4 +61,5 @@
 - Létrehoztam egy részletes tervet a multi-agens rendszer felépítéséhez, különös tekintettel a tesztelésre és prompt optimalizálásra.
 - Létrehoztam egy külön dokumentumot a másik AI által javasolt alternatív multi-agens architektúráról, input/output sémákkal és workflow-val.
 - Confirmed that the master plan is fully consistent with the current codebase and documentation, and began drafting a detailed step-by-step implementation plan for rolling out the master plan architecture.
+- Major revision and renaming of the ClarifyAndScoreAgent prompt development/testing plan: document renamed to stepwise_prompt_development_plan__ClarifyAndScoreAgent.md and restructured to include stepwise goals, explicit schemas, test criteria, edge/fallbacks, regression, a summary table, and usage/versioning sections.
 
