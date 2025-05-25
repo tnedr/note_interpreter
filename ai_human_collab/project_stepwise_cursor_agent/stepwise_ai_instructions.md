@@ -1,3 +1,6 @@
+add: azz is fontos lenne, hogy a codinng agens ne kerjen engedelyet, hanem csinalja magatol, illetve amit megcsinalt az meg naplozza
+
+
 # Stepwise AI Coding Assistant – Prototípus Utasítások
 
 Ez a dokumentum egy sablont és konkrét utasításokat tartalmaz arra, hogyan lehet az AI coding assistantet lépésenkénti, kontrollált végrehajtásra bírni.
