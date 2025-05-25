@@ -1,0 +1,1 @@
+- Hozzáadtam az '1. ujsor' sort az ai_human_collab/example.txt fájl végéhez a stepwise AI teszt első lépéseként. 
