@@ -1,6 +1,11 @@
-# Prompt Testing Environment
+# Prompt Regression & Development Lab – Mini-projekt cél és mappa szerepe
 
-Ez a mappa tartalmazza a prompt-alapú teszteléshez szükséges eszközöket a note_interpreter projekthez.
+Ez a mappa egy önálló, iteratív promptfejlesztő és regressziós tesztkörnyezet a note_interpreter projekthez. Célja, hogy:
+- Gyorsan lehessen új promptokat fejleszteni, verziózni és tesztelni különböző inputokra, user memory-ra és clarification history-re.
+- Automatizált regressziós tesztekkel biztosítsa, hogy minden promptverzió visszafelé kompatibilis és minőségi maradjon.
+- Támogassa a prompt-alapú ügynökök (pl. ClarifyAndScoreAgent) fejlesztését, edge case-ek és tipikus felhasználói szcenáriók lefedésével.
+
+A mappa tartalmaz prompt sablonokat, teszt inputokat, automatizált tesztfuttató szkripteket, valamint Promptfoo és LangSmith integrációt a gyors iteráció és minőségbiztosítás érdekében.
 
 ## Promptfoo használata
 
