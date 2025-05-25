@@ -1,6 +1,47 @@
 # Functional Specification – Prompt Lab
 
-This document defines the functional requirements and supported workflows of the **Prompt Lab** system itself. It does **not** specify the logic or requirements of the agents being tested, but rather what the lab as a meta-tool must provide for prompt/agent development, testing, and regression.
+---
+
+## Stepwise, Gated Prompt Evolution & Regression Policy (Core Principle)
+
+**This is a core functional principle of the Prompt Lab.**
+
+- **Stepwise, milestone-based development:**
+  - Prompt and agent functionality is expanded in clearly defined steps (milestones).
+  - Each milestone introduces new features, but all previous features and behaviors must remain intact and functional.
+
+- **Append-only prompt evolution:**
+  - Prompt versions are created in an append-only fashion: new sections or logic are added, but existing sections and logic are preserved.
+  - This ensures backward compatibility and traceability of prompt evolution.
+
+- **Gated workflow:**
+  - Progression to the next milestone is only allowed if the current prompt version passes **all** tests from previous milestones, as well as new tests for the current step.
+  - If any regression is detected (i.e., a previously passing test fails), the new prompt version must be fixed before moving forward.
+
+- **Strict regression enforcement:**
+  - Regression testing is mandatory at every milestone.
+  - The system must automatically run all relevant tests for every prompt version and block advancement if any test fails.
+
+- **Milestone acceptance policy:**
+  - A new prompt version (milestone) is only accepted if:
+    - All previous and current tests pass
+    - All previous functionality is preserved
+    - New features are correctly implemented and tested
+
+- **(Optional) Example workflow:**
+  ```python
+  for step in stepwise_schedule:
+      generate_new_prompt(step)
+      for test in all_previous_and_current_tests:
+          result = run_test(prompt_version=step.version, test_case=test)
+          if not result.passed:
+              print(f"Step {step.name} failed on test {test.name}. Fix required before proceeding.")
+              break
+      else:
+          print(f"Step {step.name} passed all tests. Proceed to next step.")
+  ```
+
+**This policy ensures that prompt evolution is robust, traceable, and always backward compatible. It is a key differentiator of the Prompt Lab compared to ad-hoc prompt development.**
 
 ---
 
