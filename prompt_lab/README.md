@@ -1,12 +1,10 @@
 # 🧪 Prompt Regression & Development Lab
 
-## Overview / Áttekintés
+## Overview
 
 This project is a **modular, testable, and iterative framework** for developing and validating prompts used by LLM-based agents. It is designed as a *subproject* within a larger AI agent development ecosystem, and its goal is to ensure that prompts evolve in a controlled, regression-tested manner.
 
 **This lab is designed for _stepwise, multi-turn prompt development_: you can build, test, and version agents that interact with the user in multiple rounds, asking clarifying questions if needed, not just static one-shot prompts.**
-
-**Ez a labor kifejezetten _lépésenkénti, többkörös promptfejlesztésre_ készült: olyan agenteket lehet vele építeni és tesztelni, amelyek több lépésben, pontosító kérdésekkel, interaktívan működnek – nem csak egyszerű, statikus promptokat kezel.**
 
 This lab provides the infrastructure to:
 - Develop prompts in a structured and versioned way.
@@ -15,11 +13,9 @@ This lab provides the infrastructure to:
 - Analyze and log the resulting outputs.
 - Compare versions to detect regressions or improvements.
 
-A fő cél, hogy minden LLM-alapú ügynök (agent) promptjai könnyen fejleszthetők, tesztelhetők és összehasonlíthatók legyenek, valósághű inputokkal és automatizált regressziós tesztekkel.
-
 ---
 
-## Project Goals / Projektcélok
+## Project Goals
 
 - 🧠 Enable **prompt engineering as a software discipline**.
 - 🔁 Facilitate **prompt versioning and regression detection**.
@@ -27,11 +23,10 @@ A fő cél, hogy minden LLM-alapú ügynök (agent) promptjai könnyen fejleszth
 - 📦 Isolate and test individual agent functionalities before full-scale integration.
 - 💡 Serve as a test harness and ideation space for advanced agent behavior.
 - 🧩 **Stepwise, multi-turn agent logic**: Support for agents that clarify, iterate, and refine their output through multiple prompt rounds.
-- **Lépésenkénti, többkörös agent logika**: Olyan agentek támogatása, amelyek pontosítanak, visszakérdeznek, és több lépésben adják meg a végső választ.
 
 ---
 
-## Project Structure / Mappastruktúra
+## Project Structure
 
 ```plaintext
 prompt-lab/
@@ -58,11 +53,11 @@ prompt-lab/
 └── configs/ ← Optional: Promptfoo, LangSmith configs, env vars
 ```
 
-A részletes tesztelési elveket és workflow-t lásd: `docs/TESTING_MASTER_GUIDE.md`
+See also: `docs/TESTING_MASTER_GUIDE.md`
 
 ---
 
-## Core Workflow / Fő workflow
+## Core Workflow
 
 1. 🛠 **Define stepwise agent behavior** – not just static prompts, but multi-turn, clarification-capable agents.
 2. 🧱 **Build Prompt** – Use `PromptBuilder` to load and assemble prompt from YAML
@@ -70,27 +65,27 @@ A részletes tesztelési elveket és workflow-t lásd: `docs/TESTING_MASTER_GUID
 4. 📤 **Input & Output** – Feed test input (note, memory, etc.), including multi-step clarification scenarios
 5. 🔬 **Evaluate Behavior** – Optionally define expected patterns or run diffing and scoring
 
-**A workflow támogatja a több lépéses, pontosító kérdéseket is tartalmazó agent pipeline-ok fejlesztését és tesztelését.**
+**The workflow supports the development and testing of multi-step, clarification-capable agent pipelines.**
 
 ---
 
-## Tesztelési architektúra és workflow (magyar részletes leírás)
+## Testing Architecture & Workflow
 
-A promptfejlesztés és -tesztelés folyamata a következő lépésekből áll:
+The prompt development and testing process consists of the following steps:
 
-1. **Promptverziók kezelése:**  
-   Minden ügynök promptja külön YAML fájlban, verziózva található a `prompts/` mappában.
-2. **Teszt inputok:**  
-   Valósághű, változatos input YAML-ok a `test_inputs/` mappában (pl. notes, user memory, clarification history, több lépéses példák).
-3. **Automatizált tesztfuttatás:**  
-   A `run_prompt_tests.py` script minden promptverziót minden inputtal lefuttat, és naplózza az eredményeket.  
-   - A script a PromptBuilder-t használja a prompt generálásához.
-   - Az LLM-et (pl. OpenAI GPT-4) hívja meg a generált prompttal.
-   - Az outputokat logolja, opcionálisan összeveti elvárt eredményekkel.
-4. **Promptfoo és LangSmith integráció:**  
-   Ezek az eszközök lehetővé teszik a promptok deklaratív, automatizált tesztelését, valamint a webes playground használatát gyors iterációhoz.
-5. **Eredmények és regresszió:**  
-   Minden promptverzióra és inputra visszamenőleg is futnak a tesztek, így azonnal látható, ha egy új promptverzió visszalépést okoz (regresszió).
+1. **Prompt versioning:**  
+   Each agent's prompts are stored as separate YAML files, versioned in the `prompts/` folder.
+2. **Test inputs:**  
+   Realistic, diverse input YAMLs in the `test_inputs/` folder (e.g., notes, user memory, clarification history, multi-step examples).
+3. **Automated test execution:**  
+   The `run_prompt_tests.py` script runs every prompt version with every input and logs the results.  
+   - The script uses PromptBuilder to generate the prompt.
+   - The LLM (e.g., OpenAI GPT-4) is called with the generated prompt.
+   - Outputs are logged and optionally compared to expected results.
+4. **Promptfoo and LangSmith integration:**  
+   These tools enable declarative, automated prompt testing and a web playground for rapid iteration.
+5. **Results and regression:**  
+   Tests are run for all prompt versions and inputs, so regressions are immediately visible.
 
 ---
 
@@ -119,30 +114,30 @@ expected:
 
 ---
 
-## How To Run / Futtatás
+## How To Run
 
-1. Telepítsd a függőségeket:
+1. Install dependencies:
    ```sh
-   pip install -r requirements.txt  # vagy pipenv install -r prompt_testing/requirements.txt
+   pip install -r requirements.txt  # or pipenv install -r prompt_testing/requirements.txt
    ```
-2. Futtasd a teszteket:
+2. Run the tests:
    ```sh
    python scripts/run_tests.py
-   # vagy
+   # or
    pipenv run promptfoo test promptfoo.yaml --provider openai:gpt-4
    ```
-3. Webes playground indítása:
+3. Start the web playground:
    ```sh
    pipenv run promptfoo web
    ```
-4. LangSmith használata:
-   - Regisztrálj a https://smith.langchain.com/ oldalon, és szerezd meg az API kulcsodat.
-   - Állítsd be a környezeti változókat (pl. `.env`):
+4. LangSmith usage:
+   - Register at https://smith.langchain.com/ and get your API key.
+   - Set environment variables (e.g., `.env`):
      ```
      LANGCHAIN_API_KEY=your-key-here
      LANGCHAIN_TRACING_V2=true
      ```
-   - Futtasd a scriptet:
+   - Run the script:
      ```sh
      pipenv run python langsmith_test.py
      ```
@@ -159,18 +154,13 @@ expected:
 
 ---
 
-## Philosophy / Filozófia
+## Philosophy
 
 Don't build monolith prompts. Build evolving, testable, **stepwise**, intelligent components — just like great code.
 
-Ne monolit promptokat építs! Fejlessz evolúciós, tesztelhető, **lépésenként fejlődő**, intelligens komponenseket – akárcsak a jó kódot.
-
 ---
 
-## Referencia
-A részletes tesztelési elveket és workflow-t lásd: `docs/TESTING_MASTER_GUIDE.md`
-
-## Meta Input/Output – The Prompt Lab as a System / Meta bemenet és kimenet
+## Meta Input/Output – The Prompt Lab as a System
 
 **Meta Input (what you give to the Prompt Lab):**
 - **Agent definition:**  
@@ -196,39 +186,15 @@ A részletes tesztelési elveket és workflow-t lásd: `docs/TESTING_MASTER_GUID
 
 ---
 
-**Meta bemenet (amit a Prompt Lab kap):**
-- **Agens definíció:**  
-  Mi az agent célja?  
-  Mik az elvárt inputjai/outputjai?  
-  Mi a stepwise prompt pipeline (hány lépés, mi történik egyes lépésekben)?
-- **Prompt verziók:**  
-  YAML fájlok, amelyek minden prompt lépést leírnak.
-- **Tesztesetek:**  
-  Input szcenáriók (akár több lépésben), elvárt outputok, clarification flow-k.
-- **Értékelési kritériumok:**  
-  Mitől "jó" egy output? (pl. tartalmaznia kell bizonyos infót, kérdezzen, ha nem egyértelmű, stb.)
+**Example:**
 
-**Meta kimenet (amit a Prompt Lab előállít):**
-- **Teszteredmények:**  
-  Minden agent verzióra és tesztesetre, mi lett az output? Megfelelt-e az elvárásnak?
-- **Logok és diffek:**  
-  Részletes naplók, output különbségek prompt verziók között.
-- **Regressziós riportok:**  
-  Történt-e visszalépés egy új prompt verzióval?
-- **Prompt pipeline evolúció:**  
-  Hogyan változott az agent stepwise logikája az idő során?
-
----
-
-**Példa:**
-
-- Agent célja: "A felhasználó jegyzetét értelmezi, ha kell, pontosít."
+- Agent goal: "Interpret the user's note, ask for clarification if needed."
 - Stepwise pipeline:  
-  1. Lépés: note + memory → ha nem egyértelmű, clarification kérdés  
-  2. Lépés: note + memory + clarification → végső output
-- Teszteset:  
+  1. Step: note + memory → if ambiguous, ask clarification  
+  2. Step: note + memory + clarification → final output
+- Test case:  
   "Buy milk" + "User often forgets groceries" → "Do you need lactose-free milk?" → "Yes" → "User wants lactose-free milk."
-- Elvárt viselkedés: mindig kérdezzen, ha nem egyértelmű.
-- Kimenet: teszteredmények, logok, diffek, regressziók, prompt pipeline evolúció.
+- Expected behavior: always ask if ambiguous.
+- Output: test results, logs, diffs, regressions, prompt pipeline evolution.
 
 --- 
