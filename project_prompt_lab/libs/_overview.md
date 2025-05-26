@@ -19,4 +19,6 @@ Használd a libs mappát közös, újrahasznosítható kódok tárolására.
 3. Több helyen történő felhasználás
 
 ## Changelog
-- 2024-06-07: _overview.md létrehozva. 
+- 2024-06-07: _overview.md létrehozva.
+
+## _improve 

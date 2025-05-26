@@ -20,4 +20,6 @@ A projektben használt promptok, scoring és clarifier workflow-k YAML formátum
 3. Tesztelés, kiértékelés
 
 ## Changelog
-- 2024-06-07: _overview.md létrehozva. 
+- 2024-06-07: _overview.md létrehozva.
+
+## _improve 

@@ -18,4 +18,6 @@ Konfigurációs fájlokat itt tárolj, és innen töltsd be a workflow-k során.
 2. Workflow-k futtatása a konfigurációkkal
 
 ## Changelog
-- 2024-06-07: _overview.md létrehozva. 
+- 2024-06-07: _overview.md létrehozva.
+
+## _improve 

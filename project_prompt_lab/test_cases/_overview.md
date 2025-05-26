@@ -18,4 +18,6 @@ Ezek agent-függetlenek, és a regressziós/összehasonlító tesztelés alapjá
 2. Tesztelés, összehasonlítás
 
 ## Changelog
-- 2024-06-07: _overview.md létrehozva. 
+- 2024-06-07: _overview.md létrehozva.
+
+## _improve 

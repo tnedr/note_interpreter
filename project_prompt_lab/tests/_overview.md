@@ -19,4 +19,6 @@ Futtasd a teszteket a fejlesztés során a minőségbiztosítás érdekében.
 3. Hibák javítása
 
 ## Changelog
-- 2024-06-07: _overview.md létrehozva. 
+- 2024-06-07: _overview.md létrehozva.
+
+## _improve 

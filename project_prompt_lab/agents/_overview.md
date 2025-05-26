@@ -19,4 +19,6 @@ Az agents mappa minden LLM agenthez külön alkönyvtárat javasol, ahol a promp
 3. Verziózás, tesztelés
 
 ## Changelog
-- 2024-06-07: _overview.md létrehozva. 
+- 2024-06-07: _overview.md létrehozva.
+
+## _improve 

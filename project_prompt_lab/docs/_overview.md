@@ -18,4 +18,6 @@ Dokumentációkat, terveket, leírásokat ide ments.
 2. Verziózás, megosztás
 
 ## Changelog
-- 2024-06-07: _overview.md létrehozva. 
+- 2024-06-07: _overview.md létrehozva.
+
+## _improve 
