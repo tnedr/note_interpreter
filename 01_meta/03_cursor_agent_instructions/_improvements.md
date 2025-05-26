@@ -1,0 +1,2 @@
+- iterate over the best structure
+-- iterate and try
