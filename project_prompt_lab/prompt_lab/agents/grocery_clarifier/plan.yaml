@@ -1,0 +1,18 @@
+steps:
+  - step_name: step_01_scoring
+    goal: "Képes legyen 0–100 közötti clarity score-t adni"
+    prompt_file: prompts/s1_v1.yaml
+    experiment_cases:
+      - experiments/experiment_s1_01.yaml
+    expected_output_fields:
+      - clarity_score
+    test_focus: "basic scoring logic"
+  - step_name: step_02_clarification
+    goal: "Képes legyen kérdést generálni, ha a clarity score alacsony"
+    prompt_file: prompts/s2_v1.yaml
+    experiment_cases:
+      - experiments/experiment_s2_01.yaml
+    expected_output_fields:
+      - clarity_score
+      - clarification_question
+    test_focus: "clarification trigger and question generation" 

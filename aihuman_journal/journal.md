@@ -12,3 +12,7 @@
 - Minden fő mappába létrehoztam egy _overview.md-t a project_prompt_lab alatt, amely tartalmazza: purpose, context, usage, file index, workflow, changelog.
 - Minden _overview.md végére bekerült egy üres _improve szekció a project_prompt_lab fő mappáiban.
 - Bővítettem a Prompt Lab technikai specifikációját: hozzáadtam a StepwisePlanManager komponenst az architektúrához, részleteztem a feladatait, és kibővítettem az interfész szekciót a Prompt Evolution Plan formátumával és új CLI paranccsal.
+- Áttekintettem és dokumentáltam a libs mappában lévő új modulokat (agent_core.py, prompt_builder.py, colors.py, log.py), rövid összefoglalót írtam az _overview.md-be.
+- Elkészült a minimalista teszt pipeline (run_tests.py) az MVP Phase 1-hez: betölti a promptot és tesztesetet, dummy LLM-mel lefuttatja, és ellenőrzi az outputot.
+- Elkészült a StepwisePlanManager MVP váza (libs/stepwise_manager.py): betölti és feldolgozza a stepwise plan-t, listázza a step metaadatokat.
+- Létrehoztam egy új, experiment-alapú plan.yaml-t a grocery_clarifier agenthez, amely experiment_cases-t és bővített YAML struktúrát használ.
