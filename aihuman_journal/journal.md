@@ -3,3 +3,4 @@
 - Elolvastam a project_stepwise_cursor_agent mappában található összes fájlt, és összefoglaltam a tartalmukat. 
 - Minden fő mappába létrehoztam egy _overview.md-t a project_prompt_lab alatt, amely tartalmazza: purpose, context, usage, file index, workflow, changelog.
 - Minden _overview.md végére bekerült egy üres _improve szekció a project_prompt_lab fő mappáiban.
+- Bővítettem a Prompt Lab technikai specifikációját: hozzáadtam a StepwisePlanManager komponenst az architektúrához, részleteztem a feladatait, és kibővítettem az interfész szekciót a Prompt Evolution Plan formátumával és új CLI paranccsal.

@@ -12,6 +12,7 @@ Brief summary of the technical approach for the Prompt Lab project.
   - Logging/Evaluation
   - Test runners/scripts
   - Integration with LLM APIs (e.g., OpenAI)
+  - StepwisePlanManager
 
 ## 3. Data Flow
 - How data moves through the system (input → agent → prompt → LLM → output → evaluation)
@@ -39,10 +40,42 @@ Brief summary of the technical approach for the Prompt Lab project.
 - Scripts for automated and manual test execution
 - Integration with Promptfoo, LangSmith, etc.
 
+### 4.6 StepwisePlanManager
+Feladat: Ez a komponens olvassa a Prompt Evolution Plan fájlokat, és szekvenciálisan végigvezeti az agentet a prompt evolúció lépésein.
+
+Funkciók:
+- Plan betöltése YAML/Markdown fájlból
+- Lépésenkénti prompt betöltés és tesztfuttatás
+- Regressziós validáció kezelése
+- Plan szerkezet validálása
+
+Bemenetek:
+- plan_path: a Prompt Evolution Plan fájl elérési útja
+- agent_id: az agent azonosítója
+
+Kimenetek:
+- Futási státuszok, logok
+- Regressziós teszteredmények
+
+Bővíthetőség:
+- Későbbi támogatás: vizuális plan szerkesztő, többféle fájlformátum (pl. JSON, DSL)
+
 ## 5. Interfaces
 - YAML/JSON file formats for prompts, test cases, agent definitions
 - Command-line interface for test runners
 - (Optional) Web UI or playground integration
+
+Prompt Evolution Plan formátum:
+- Támogatott típusok: .yaml, .md
+- Kötelező mezők:
+  - step_name
+  - goal
+  - required_prompt_sections
+  - expected_output_fields
+  - test_focus
+
+CLI interfész bővítése:
+- Új parancs: run_stepwise --agent note_interpreter --plan clarify_plan.yaml
 
 ## 6. Technologies & Dependencies
 - Python 3.x
