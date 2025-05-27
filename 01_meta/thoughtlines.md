@@ -1,0 +1,3 @@
+- kipucolni a rootot, mi mire valo
+- ez a thoughtline, brainstorm
+- van itt egy metadata, mminek?
