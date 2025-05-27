@@ -1,6 +1,8 @@
 # AI-Human Project Journal
 
 - A Prompt Lab funkcionális specifikációja bővült a Stepwise Prompt Development Support (3.6) és az Evolution-based Agent Development workflow szekciókkal.
+- A Prompt Lab funkcionális specifikációja bővült a Prompt Attempts & Iterative Learning (Human-in-the-loop support) szekcióval.
+- A Prompt Lab technikai specifikációja bővült az Attempt-level tracking and experience logging, valamint a Prompt Attempt Metadata & Logs szekciókkal.
 - now 2024-06-08
 
 - A Prompt Lab rendszerleírásába bekerült a StepwisePlanManager komponens, a paraméterezhető Prompt Evolúció elv, és a Prompt Evolution Plan bővíthetőség.

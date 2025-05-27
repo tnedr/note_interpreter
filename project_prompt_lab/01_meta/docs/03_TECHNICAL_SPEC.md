@@ -60,6 +60,19 @@ Kimenetek:
 Bővíthetőség:
 - Későbbi támogatás: vizuális plan szerkesztő, többféle fájlformátum (pl. JSON, DSL)
 
+### Attempt-level tracking and experience logging
+
+A StepwisePlanManager támogatja az iteratív promptfejlesztést step szinten:
+- Minden prompt fájlhoz metaadatot rendelhet (`meta` blokk vagy külön `.md`)
+- Automatikusan nyilvántartja, hogy melyik próbálkozás mikor és miért lett sikeres/sikertelen
+- Opcionálisan aggregálhatja az attempt logokat egy `attempts_index.yaml` fájlba
+
+#### Példák
+- `v1.2.yaml`: meta blokk (status, attempt_id, author, timestamp)
+- `v1.2__log.md`: részletes leírás a hibáról és a tapasztalatról
+
+A rendszer lehetővé teszi a tapasztalati naplók visszacsatolását más komponensekhez (pl. AI javaslatgeneráláshoz).
+
 ## 5. Interfaces
 - YAML/JSON file formats for prompts, test cases, agent definitions
 - Command-line interface for test runners
@@ -76,6 +89,51 @@ Prompt Evolution Plan formátum:
 
 CLI interfész bővítése:
 - Új parancs: run_stepwise --agent note_interpreter --plan clarify_plan.yaml
+
+### Prompt Attempt Metadata & Logs
+
+#### 1. Prompt fájl `meta` szekció (opcionális)
+```yaml
+meta:
+  attempt_id: "attempt_003"
+  status: "failed"
+  author: "tamas"
+  timestamp: "2025-05-27T14:12"
+  notes:
+    - "clarity_score missing"
+    - "LLM interpreted vague instruction"
+```
+
+#### 2. Log fájl formátum (logs/attempt_003__log.md)
+```markdown
+# Log for attempt_003 (prompt: v1.2.yaml)
+
+## Issues Encountered
+- Output field `clarity_score` was null
+- LLM misunderstood instruction
+
+## Root Cause
+- Missing schema section in prompt
+
+## Fix Plan
+- Add output_schema section with explicit field description
+
+## Human Notes
+Likely fixed by adding examples to scoring_guidelines.
+
+*Created by: tamas on 2025-05-27*
+```
+
+#### 3. (Opcionális) attempts_index.yaml
+```yaml
+attempts:
+  - id: "attempt_003"
+    prompt: "v1.2.yaml"
+    log: "v1.2__log.md"
+    status: "failed"
+    timestamp: "2025-05-27"
+    notes: ["clarity_score missing", "unclear scoring"]
+```
 
 ## 6. Technologies & Dependencies
 - Python 3.x

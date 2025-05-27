@@ -113,6 +113,36 @@ A StepwisePlanManager automatikusan értelmezi és vezérli a prompt evolúciój
 - Minden új lépés csak akkor aktiválható, ha az előző lépésekhez tartozó összes teszt sikeresen lefutott.
 - A fejlesztő (prompt engineer) csak új funkciók hozzáadásával módosíthatja a promptot – meglévő logika nem törölhető (append-only elv).
 
+### Prompt Attempts & Iterative Learning (Human-in-the-loop support)
+
+- A Prompt Lab támogatja, hogy egyetlen step több prompt verzión keresztül valósuljon meg.
+- Minden új funkció (milestone) implementációját több próbálkozás (prompt attempt) előzheti meg.
+- Egy *Prompt Attempt*:
+  - Egy konkrét prompt YAML fájl (pl. `v1.2.yaml`)
+  - Hozzá tartozó manuális és/vagy gépi értékelési log (`v1.2__log.md`)
+  - Metaadat (status: passed/failed, timestamp, human notes, etc.)
+
+#### Cél
+- A fejlesztő dokumentálhassa, hogy egy adott prompt verzió miért működött vagy nem működött.
+- A StepwisePlanManager képes legyen ezekhez a próbálkozásokhoz rendelni tapasztalatokat.
+- Ezek a tapasztalatok később gépi tanulás, AI-javaslatgenerálás alapját képezhetik.
+
+#### Naplózás módjai
+- A prompt fájlban opcionálisan szerepelhet egy `meta` blokk.
+- A részletes leírás külön `.md` fájlban vezethető (`logs/v1.2__log.md`)
+- Egy stephez több ilyen próbálkozás tartozhat.
+
+#### Példa fájlstruktúra egy stepre
+clarify_agent/
+step_02_interpretation/
+prompts/
+v1.1_failed.yaml
+v1.2_final.yaml
+logs/
+v1.1__log.md
+v1.2__log.md
+attempts_index.yaml (opcionális összefoglaló)
+
 ---
 
 ## 4. Supported Workflows
