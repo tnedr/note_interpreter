@@ -17,6 +17,59 @@ A session may start unstructured and evolve toward a clearer type as it progress
 
 ---
 
+## 🗂️ 1.a Recommended File Structure & Practice
+
+To ensure clarity, searchability, and automation:
+
+### 📁 Folder Structure
+
+* All sessions stored in a `sessions/` directory
+* File naming convention: `session_YYYY-MM-DD__slug.md`
+
+### 🧾 Example:
+
+```
+myproject/
+  sessions/
+    session_2025-05-27__focus-session-definition.md
+    session_2025-05-28__cache-structure-design.md
+  session_dashboard.md
+  README.md
+```
+
+### 📋 Each session = 1 Markdown file
+
+* Log entire session in standard template (see Section 2)
+* Optional YAML frontmatter for automation:
+
+```yaml
+---
+title: Focus Session – AI Collab Structure
+date: 2025-05-27
+type: Focus
+tags: [session, ai-collab, meta]
+---
+```
+
+### 📊 Central Session Dashboard
+
+* One file: `session_dashboard.md`
+* Summarizes all session files
+
+### 🌱 Optional Backlog / Tree
+
+* Track future session ideas or branches
+* Example:
+
+```markdown
+# 🌱 Session Backlog
+- [ ] AI memory integration (from session_2025-05-27)
+- [ ] Self-logging agent prototype
+- [ ] Session resume logic
+```
+
+---
+
 ## 📋 2. Full Session Template (with Explanation)
 
 ```markdown
