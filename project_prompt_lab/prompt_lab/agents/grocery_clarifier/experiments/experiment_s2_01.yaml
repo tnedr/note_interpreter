@@ -1,0 +1,5 @@
+input:
+  note: "tej"
+expected:
+  clarity_score: 60
+  clarification_question: "Mit értesz tej alatt?" 

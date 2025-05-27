@@ -1,0 +1,4 @@
+input:
+  note: "tej"
+expected:
+  clarity_score: 60 

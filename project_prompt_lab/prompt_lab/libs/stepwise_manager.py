@@ -6,7 +6,7 @@ class StepwisePlanManager:
     """
     Minimal MVP: Stepwise plan loader and parser.
     - Loads a stepwise plan (YAML or Markdown)
-    - Parses steps: step name, prompt file, experiment/test file, expected fields
+    - Parses steps: step name, prompt file, experiment_cases (list), expected fields
     - Lists steps and their metadata
     - (No execution logic yet)
     """
@@ -48,7 +48,9 @@ class StepwisePlanManager:
         for i, step in enumerate(self.steps):
             print(f"  {i+1}. {step.get('step_name', f'step_{i+1}')}")
             print(f"     Prompt: {step.get('prompt_file')}")
-            print(f"     Experiment: {step.get('experiment_file')}")
+            print(f"     Experiment cases:")
+            for exp in step.get('experiment_cases', []):
+                print(f"        - {exp}")
             print(f"     Expected fields: {step.get('expected_output_fields')}")
 
 # TODO: Add execution logic (run all steps, check outputs, log results)
