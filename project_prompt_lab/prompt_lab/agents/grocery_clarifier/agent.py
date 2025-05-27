@@ -1,7 +1,7 @@
-from prompt_lab.libs.agent_core import AgentCore
+from project_prompt_lab.prompt_lab.libs.agent_core_v2 import AgentCoreV2
 from langchain_openai import ChatOpenAI
 
-class GroceryClarifierAgent(AgentCore):
+class GroceryClarifierAgent(AgentCoreV2):
     """
     Agent for grocery note clarification, using OpenAI LLM.
     The LLM model is passed in as a parameter (dependency injection).

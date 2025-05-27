@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import os
 import pytest
 from pathlib import Path
@@ -41,6 +44,9 @@ def test_stepwise_pipeline_real_llm():
                 {"role": "user", "content": prompt}
             ]
             output = agent.invoke_with_message_list(messages)
+            print("\n--- FULL LLM OUTPUT ---\n")
+            print(json.dumps(output, indent=2, ensure_ascii=False, default=str))
+            print("\n--- END FULL LLM OUTPUT ---\n")
             # Try to parse the full result from display_message
             result = None
             if output["type"] in ("conversation", "tool_call"):

@@ -24,6 +24,14 @@ Futtatásukhoz:
 pytest project_prompt_lab/tests/test_run_stepwise_real_llm.py -m llm_required
 ```
 
+> **Tipp:** Ha egyetlen tesztfájlt futtatsz, és import hibát kapsz (ModuleNotFoundError: No module named 'prompt_lab'), ellenőrizd, hogy a tesztfájl elején benne van-e:
+> ```python
+> import sys
+> from pathlib import Path
+> sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+> ```
+> Ez biztosítja, hogy a prompt_lab importok működjenek.
+
 > **Fontos:** Ezekhez szükséges az `OPENAI_API_KEY` környezeti változó (pl. `.env` fájlban vagy shellben exportálva).
 
 ## 3. Minden teszt futtatása (nem ajánlott CI-ben)

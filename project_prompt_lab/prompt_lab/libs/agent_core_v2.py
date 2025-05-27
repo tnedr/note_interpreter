@@ -264,7 +264,7 @@ class MessageType:
     TOOL_RESULT = "tool_result"
     ERROR = "error"
 
-class AgentCore(Generic[StateType, ResponseType]):
+class AgentCoreV2(Generic[StateType, ResponseType]):
     """
     Core agent implementation with interactive capabilities.
     :param logger: Logger instance to use for logging (default: standard logging.getLogger(__name__))
@@ -328,71 +328,61 @@ class AgentCore(Generic[StateType, ResponseType]):
                 self.logger.error(f"Initialization error: {str(e)}")
                 self.print_agent_message("Error during initialization. Please try again.")
 
-    
+    def build_full_response_object(self, llm_response, parsed_response, validated_output=None):
+        return {
+            "type": MessageType.TOOL_CALL if parsed_response.get("tool_used") else MessageType.CONVERSATION,
+            "display_message": parsed_response.get("message"),
+            "tool_details": {
+                "name": parsed_response.get("tool_name"),
+                "args": parsed_response.get("tool_args")
+            } if parsed_response.get("tool_used") else None,
+            "raw_response": llm_response,
+            "parsed_response": parsed_response,
+            "validated_output": validated_output
+        }
+
     def handle_user_message(self, message: str) -> Dict:
         """Process a user message and return structured response"""
         try:
-            # User message logging
             self._add_to_conversation_history({
                 "role": "user",
                 "content": message,
                 "timestamp": datetime.now().isoformat()
             })
-
-            # --- LOG the full conversation history before LLM call ---
             try:
                 self.logger.debug("[DEBUG] Conversation history sent to LLM:\n" + json.dumps(self.state.conversation_history, indent=2, ensure_ascii=False))
             except Exception as e:
                 self.logger.debug(f"[DEBUG] Could not serialize conversation history: {e}")
-
-            # LLM response processing
             llm_response = self.bound_llm.invoke(self.state.conversation_history)
-            response_data = self._extract_llm_response(llm_response)
-
-            # Check if a tool was used
-            if response_data.get('tool_used'):
-                # Process tool usage and capture the result
-                tool_result = self.execute_tool_function(response_data)
-
-                # Record complete tool usage including the result
+            parsed_response = self._extract_llm_response(llm_response)
+            # Optionally, validated_output = self.validate_output(parsed_response)  # Not implemented yet
+            validated_output = None
+            if parsed_response.get('tool_used'):
+                tool_result = self.execute_tool_function(parsed_response)
                 self.state.tool_outputs.append({
-                    "tool_name": response_data['tool_name'],
-                    "tool_args": response_data['tool_args'],
-                    "result": tool_result,  # Use the result from process_tool_usage
+                    "tool_name": parsed_response['tool_name'],
+                    "tool_args": parsed_response['tool_args'],
+                    "result": tool_result,
                     "timestamp": datetime.now().isoformat()
                 })
-
-                # Create history entry for tool usage
                 history_entry = {
                     "role": "assistant",
                     "type": MessageType.TOOL_CALL,
-                    "content": response_data['message'],
+                    "content": parsed_response['message'],
                     "timestamp": datetime.now().isoformat(),
-                    "tool_name": response_data['tool_name'],
-                    "tool_args": response_data['tool_args'],
-                    "tool_result": tool_result  # Store the result from process_tool_usage
+                    "tool_name": parsed_response['tool_name'],
+                    "tool_args": parsed_response['tool_args'],
+                    "tool_result": tool_result
                 }
             else:
-                # Create history entry for regular conversation
                 history_entry = {
                     "role": "assistant",
                     "type": MessageType.CONVERSATION,
-                    "content": response_data['message'],
+                    "content": parsed_response['message'],
                     "timestamp": datetime.now().isoformat()
                 }
-
             self._add_to_conversation_history(history_entry)
-
-            # Return structured response
-            return {
-                "type": MessageType.TOOL_CALL if response_data['tool_used'] else MessageType.CONVERSATION,
-                "display_message": response_data['message'],
-                "tool_details": {
-                    "name": response_data['tool_name'],
-                    "args": response_data['tool_args']
-                } if response_data['tool_used'] else None
-            }
-
+            return self.build_full_response_object(llm_response, parsed_response, validated_output)
         except Exception as e:
             error_msg = f"Error processing message: {str(e)}"
             self.logger.error(error_msg)
@@ -405,10 +395,11 @@ class AgentCore(Generic[StateType, ResponseType]):
             return {
                 "type": MessageType.ERROR,
                 "display_message": f"An error occurred: {str(e)}",
-                "error_details": error_msg
+                "error_details": error_msg,
+                "raw_response": None,
+                "parsed_response": None,
+                "validated_output": None
             }
-
-    
 
     def execute_tool_function(self, response_data: Dict) -> Any:
         """Execute a tool function with given arguments and shared context."""
@@ -557,29 +548,20 @@ class AgentCore(Generic[StateType, ResponseType]):
             return prompt
 
     def invoke_with_message_list(self, messages: List[Dict]) -> Dict:
-        """
-        Stateless, zero-shot LLM invocation: does NOT append to internal conversation history.
-        Directly invokes the LLM with the provided messages list and returns the structured response.
-        """
+        """Invoke the LLM with a list of messages and return a full response object"""
         try:
-            # Log the messages being sent
-            if self.debug_mode:
-                self.logger.debug("[DEBUG] Zero-shot messages sent to LLM:\n" + json.dumps(messages, indent=2, ensure_ascii=False))
             llm_response = self.bound_llm.invoke(messages)
-            response_data = self._extract_llm_response(llm_response)
-            return {
-                "type": MessageType.TOOL_CALL if response_data['tool_used'] else MessageType.CONVERSATION,
-                "display_message": response_data['message'],
-                "tool_details": {
-                    "name": response_data['tool_name'],
-                    "args": response_data['tool_args']
-                } if response_data['tool_used'] else None
-            }
+            parsed_response = self._extract_llm_response(llm_response)
+            validated_output = None  # Optionally, call self.validate_output(parsed_response)
+            return self.build_full_response_object(llm_response, parsed_response, validated_output)
         except Exception as e:
-            error_msg = f"Error processing message: {str(e)}"
+            error_msg = f"Error invoking LLM: {str(e)}"
             self.logger.error(error_msg)
             return {
                 "type": MessageType.ERROR,
                 "display_message": f"An error occurred: {str(e)}",
-                "error_details": error_msg
+                "error_details": error_msg,
+                "raw_response": None,
+                "parsed_response": None,
+                "validated_output": None
             }
