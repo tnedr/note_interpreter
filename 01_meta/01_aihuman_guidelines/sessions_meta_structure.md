@@ -31,10 +31,10 @@ To ensure clarity, searchability, and automation:
 ```
 myproject/
   sessions/
+    _session_dashboard.md
+    _session_tree.md
     session_2025-05-27__focus-session-definition.md
     session_2025-05-28__cache-structure-design.md
-  session_dashboard.md
-  README.md
 ```
 
 ### 📋 Each session = 1 Markdown file
