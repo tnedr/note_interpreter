@@ -1,17 +1,29 @@
+topics I solve
+- lifeOS
+-- note interpreter
+--- prompt engineering
+---- guidelines
+
+
 guidelines
 - Minden solution-ben használd ezt a guideline mappát
 - minden fő mappában alkalmazd az overview.md + _improve.md mintát.
+- kulonbozo vonatkozasi szintek
+-- guidelines for scripts and improvements (for agent executions)
+-- guidelines for structure
+-- guidelines for interactions???
 
-notes
-- lett thoughtlines file, ebbe azokat rakom, hgoy a leagazasokat tudjam kezelni -> guidelines
-- beszelgetesek kezelese, feldolgozasa fontos
 
 task
 - guideline kozpontositasa, csak egy maradhat
-
 - comment: rreggelente felvenni a fonalat, hogyan
 - question: regi beszelgetesek feldolgozasa es kidobasa ha mar nem kell
 -- a regiekbol a todokat kiszedni
+
+good to have
+- py ami osszeszedi a _improve.md fileokat -> es csinal beloluk egy md filet
+- script output, vagy instruction output, azz is legyen a guidelineba
+
 
 conclusions
 - instructions inkabb copy paste legyen nem kell kulon file
@@ -19,10 +31,10 @@ conclusions
 - Az összes guideline, sablon, improvement log legyen úgy írva, hogy mind ember, mind AI könnyen értelmezze, bővítse, használja.
 
 
-topics I solve
-- lifeOS
--- note interpreter
---- prompt engineering
+notes
+- lett thoughtlines file, ebbe azokat rakom, hgoy a leagazasokat tudjam kezelni -> guidelines
+- beszelgetesek kezelese, feldolgozasa fontos
+
 
 
 
@@ -31,7 +43,7 @@ topics I solve
 todos
 -------------
 main
-- calify agent prompt config
+- clarify agent prompt config
 
 
 important
