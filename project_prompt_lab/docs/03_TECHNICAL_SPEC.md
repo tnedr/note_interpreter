@@ -49,6 +49,8 @@ Funkciók:
 - Regressziós validáció kezelése
 - Plan szerkezet validálása
 
+**Jelenleg a StepwisePlanManager elsődlegesen `.yaml` típusú plan fájlokat támogat, melyekben explicit módon definiálva vannak a lépések (steps), az egyes step-ekhez tartozó prompt fájl, experiment fájl(ok), elvárt output mezők és tesztelési fókusz.**
+
 Bemenetek:
 - plan_path: a Prompt Evolution Plan fájl elérési útja
 - agent_id: az agent azonosítója
