@@ -164,6 +164,8 @@ attempts:
 
 # 03\_TECHNICAL\_SPEC.md – Prompt Lab Technikai Specifikáció
 
+# 03\_TECHNICAL\_SPEC.md – Prompt Lab Technikai Specifikáció
+
 ## 🧱 Könyvtárszerkezet (Folder Structure)
 
 A Prompt Lab rendszer fő komponensei a `prompt_lab/` könyvtáron belül helyezkednek el:
@@ -191,15 +193,15 @@ prompt_lab/
 
 ## 📄 Fájltípusok és szerepeik
 
-| Fájlnév példa           | Kiterjesztés      | Tartalom                           | Hely                 | Megjegyzés          |
-| ----------------------- | ----------------- | ---------------------------------- | -------------------- | ------------------- |
-| `s3_v1.yaml`            | `.yaml`           | Prompt sablon `{input}` változóval | `prompts/`           | Aktív verziók       |
-| `test_s3_01.yaml`       | `.yaml`           | input + expected                   | `test_cases/`        | Teszt összevetéshez |
-| `s3_v1__output_01.json` | `.json` / `.yaml` | LLM válasz                         | `outputs/`           | Opcionális          |
-| `s3_v1__log.md`         | `.md`             | Automatikus log (diff, match)      | `logs/`              | Kötelező            |
-| `attempts_index.yaml`   | `.yaml`           | Minden próbálkozás metaadata       | gyökér (agent alatt) | Lásd alább          |
-| `plan.md`               | `.md`             | Prompt evolution roadmap           | gyökér               | Step-leírás         |
-| `overview.md`           | `.md`             | Rövid leírás az agent céljáról     | gyökér               | Emberi dokumentáció |
+| Fájlnév példa           | Kiterjesztés      | Tartalom                                                       | Hely                 | Megjegyzés            |
+| ----------------------- | ----------------- | -------------------------------------------------------------- | -------------------- | --------------------- |
+| `s3_v1.yaml`            | `.yaml`           | Prompt sablon `{input}` változóval, opcionális `meta:` blokkal | `prompts/`           | Aktív verziók         |
+| `test_s3_01.yaml`       | `.yaml`           | input + expected                                               | `test_cases/`        | Teszt összevetéshez   |
+| `s3_v1__output_01.json` | `.json` / `.yaml` | LLM válasz                                                     | `outputs/`           | Opcionális            |
+| `s3_v1__log.md`         | `.md`             | Automatikus log (diff, match)                                  | `logs/`              | Kötelező              |
+| `attempts_index.yaml`   | `.yaml`           | Minden próbálkozás metaadata                                   | gyökér (agent alatt) | `step:` mező kötelező |
+| `plan.md`               | `.md`             | Prompt evolution roadmap                                       | gyökér               | Step-leírás           |
+| `overview.md`           | `.md`             | Rövid leírás az agent céljáról                                 | gyökér               | Emberi dokumentáció   |
 
 ---
 
@@ -224,6 +226,24 @@ attempts:
         - "Nem generált kérdést, pedig kellett volna."
         - "Talán hiányzott a clarification prompt rész."
     timestamp: "2025-05-27T14:52"
+
+  - id: "s3_v1__2025-05-27__02"
+    step: "step_3"
+    prompt: "prompts/s3_v1.yaml"
+    input:
+      note: "tej"
+    test_case: "test_cases/test_s3_01.yaml"
+    output: "outputs/s3_v1__output_02.json"
+    log: "logs/s3_v1__log_2.md"
+    status:
+      auto: "passed"
+      manual: "approved"
+    feedback:
+      author: "tamas"
+      notes:
+        - "Kiváló output, strukturált kérdéssel."
+        - "Prompt jól működik ebben a step-ben."
+    timestamp: "2025-05-27T15:20"
 ```
 
 ---
@@ -231,5 +251,3 @@ attempts:
 Ez a struktúra biztosítja, hogy minden prompt próbálkozás teljes körűen dokumentált és reprodukálható legyen. A step–prompt–attempt láncolat gépi és humán oldalról is nyomon követhető.
 
 *A Prompt Lab rendszer technikai specifikációja ezzel teljes körű támogatást ad a stepwise prompt engineering workflow-hoz.*
-
-
