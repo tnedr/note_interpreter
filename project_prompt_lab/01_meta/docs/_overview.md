@@ -1,10 +1,10 @@
-# Dokumentációs mappa – _overview.md
+# _overview.md – Dokumentációs mappa áttekintő
 
 ## Cél (Purpose)
-Ez a mappa tartalmazza a Prompt Lab projekt összes architektúra, workflow, best practice, master guide és egyéb dokumentációját.
+Ez a mappa tartalmazza a Prompt Lab projekthez kapcsolódó összes dokumentációt, specifikációt, fejlesztési tervet és tesztelési útmutatót.
 
 ## Kontextus (Context)
-A projekt minden fontosabb dokumentációja, specifikációja, fejlesztési terve és tesztelési útmutató itt található. Minden új dokumentációt, tervet, leírást ide kell menteni.
+A docs mappa kizárólag dokumentációs, tervezési, workflow és best practice anyagok számára van fenntartva. A projekt egészére vonatkozó rendszerleírás a 01_SYSTEM_SPEC.md-ben található.
 
 ## Használat (Usage)
 - Új dokumentáció, terv, leírás készítésekor ezt a mappát használd.
@@ -14,7 +14,7 @@ A projekt minden fontosabb dokumentációja, specifikációja, fejlesztési terv
 ## File Index
 - _overview.md – Ez a mappaáttekintő, cél, használat, file index, workflow, changelog.
 - _improve.md – Fejlesztési ötletek, TODO-k, hiányosságok.
-- 01_README.md – (Törlendő, tartalma beépült ide.)
+- 01_SYSTEM_SPEC.md – [A projekt teljes rendszerleírása/specifikációja]
 - 02_FUNCTIONAL_SPEC.md – Funkcionális specifikáció, fő workflow-k, elvárások.
 - 03_TECHNICAL_SPEC.md – Technikai specifikáció, architektúra, komponensek.
 - 04_implementation_plan_mvp1.md – MVP1 lépésről lépésre megvalósítási terv.
@@ -30,6 +30,6 @@ A projekt minden fontosabb dokumentációja, specifikációja, fejlesztési terv
 
 ## Changelog
 - 2024-06-07: _overview.md és 01_README.md egyesítve, file index frissítve.
-- 2024-06-07: _overview.md létrehozva.
+- 2024-06-07: _overview.md célja pontosítva, projekt rendszerleírás külön file-ba mozgatva.
 
 ## _improve 
