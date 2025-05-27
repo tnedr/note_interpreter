@@ -1,0 +1,6 @@
+input:
+  note: "tej"
+expected:
+  clarity_score: 40
+  interpreted_text: null
+  ask_user_question: "Milyen tejet szeretnél?"
