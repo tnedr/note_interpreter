@@ -26,6 +26,7 @@ good to have
 
 
 conclusions
+- beszelgetesek kezelese, feldolgozasa fontos
 - instructions inkabb copy paste legyen nem kell kulon file
 - instruction lehet a conversation kiszedeshez is
 - Az összes guideline, sablon, improvement log legyen úgy írva, hogy mind ember, mind AI könnyen értelmezze, bővítse, használja.
@@ -33,7 +34,7 @@ conclusions
 
 notes
 - lett thoughtlines file, ebbe azokat rakom, hgoy a leagazasokat tudjam kezelni -> guidelines
-- beszelgetesek kezelese, feldolgozasa fontos
+
 
 
 
