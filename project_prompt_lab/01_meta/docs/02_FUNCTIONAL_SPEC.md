@@ -101,6 +101,18 @@ Prompt Lab is a modular, extensible environment for:
 - Core logic (PromptBuilder, AgentCore, test runner) is reusable and agent-agnostic.
 - Support for multiple LLM providers and test runners (Promptfoo, LangSmith, etc.).
 
+### 3.6 Stepwise Prompt Development Support
+A rendszer támogatja a promptok lépésenkénti, milestone-alapú fejlesztését egy ún. Prompt Evolution Plan alapján.
+
+A Prompt Evolution Plan egy struktúrált dokumentum (pl. YAML vagy Markdown), amely definiálja:
+- A promptfejlesztés lépéseit (scoring, interpretation, clarification, stb.)
+- Minden lépéshez tartozó új prompt szekciókat és elvárt output mezőket
+- A regressziós tesztelés követelményeit
+
+A StepwisePlanManager automatikusan értelmezi és vezérli a prompt evolúcióját:
+- Minden új lépés csak akkor aktiválható, ha az előző lépésekhez tartozó összes teszt sikeresen lefutott.
+- A fejlesztő (prompt engineer) csak új funkciók hozzáadásával módosíthatja a promptot – meglévő logika nem törölhető (append-only elv).
+
 ---
 
 ## 4. Supported Workflows
@@ -113,6 +125,17 @@ Prompt Lab is a modular, extensible environment for:
   - Compare outputs and diffs between prompt versions for the same test cases.
 - **Multi-agent Support:**
   - Add new agent folders with their own prompts and test cases.
+
+### Evolution-based Agent Development
+Minden agent fejlesztése egy Prompt Evolution Plan alapján történik.
+
+A workflow:
+- Új prompt evolúciós terv létrehozása (prompt_plans/<agent_name>_plan.yaml)
+- Prompt verziók implementálása minden milestone-hoz
+- Tesztesetek futtatása minden korábbi és aktuális milestone-ra
+- Regressziós validáció
+
+Ez lehetővé teszi, hogy komplex funkciókat lépésről lépésre, kontrolláltan építsünk fel.
 
 ---
 

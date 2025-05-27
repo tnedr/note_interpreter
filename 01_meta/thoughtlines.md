@@ -27,24 +27,17 @@ good to have
 
 
 conclusions
-- vannak a fokuszok, az azt jelenti hogy elkezdek valamin dolgozzni, es ott lehet a leagazas, olyan mint a sprint csak rovidebb
-
-
+- vannak a sessionok, olyan mint a sprint csak rovidebb
 - ha van valami problema otlet erdemes onnan kezdni, hogy mi a problema, es milyen megoldas kellene
 - beszelgetesek kezelese, feldolgozasa fontos
 - instructions inkabb copy paste legyen nem kell kulon file
 - instruction lehet a conversation kiszedeshez is
 - Az összes guideline, sablon, improvement log legyen úgy írva, hogy mind ember, mind AI könnyen értelmezze, bővítse, használja.
 
-focus iinstead of sprints
-
 
 notes
-- lett thoughtlines file, ebbe azokat rakom, hgoy a leagazasokat tudjam kezelni -> guidelines
-
-
-
-
+- thoughtlines file, ebbe azokat rakom, hgoy a leagazasokat tudjam kezelni -> guidelines
+-- mi a szerepe, mi a prroblema???
 
 
 -------------

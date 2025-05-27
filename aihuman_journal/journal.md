@@ -1,3 +1,9 @@
+# AI-Human Project Journal
+
+- A Prompt Lab funkcionális specifikációja bővült a Stepwise Prompt Development Support (3.6) és az Evolution-based Agent Development workflow szekciókkal.
+- now 2024-06-08
+
+- A Prompt Lab rendszerleírásába bekerült a StepwisePlanManager komponens, a paraméterezhető Prompt Evolúció elv, és a Prompt Evolution Plan bővíthetőség.
 - Az '1. ujsor' sort hozzáadtam az ai_human_collab/project_stepwise_cursor_agent/example.txt fájl végéhez a stepwise AI coding test első lépéseként. 
 - A második lépésben beszúrtam a '2. ujsor' sort az ai_human_collab/example.txt fájl végére. 
 - Elolvastam a project_stepwise_cursor_agent mappában található összes fájlt, és összefoglaltam a tartalmukat. 
