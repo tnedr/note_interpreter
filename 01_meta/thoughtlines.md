@@ -1,17 +1,28 @@
-- note: lett thoughtlines -> guidelines
-- note: beszelgetesek kezelese, feldolgozasa fontos
-- task: guideline kozpontositasa, csak egy maradhat
+guidelines
+- Minden solution-ben használd ezt a guideline mappát
+- minden fő mappában alkalmazd az overview.md + _improve.md mintát.
+
+notes
+- lett thoughtlines file, ebbe azokat rakom, hgoy a leagazasokat tudjam kezelni -> guidelines
+- beszelgetesek kezelese, feldolgozasa fontos
+
+task
+- guideline kozpontositasa, csak egy maradhat
+
 - comment: rreggelente felvenni a fonalat, hogyan
 - question: regi beszelgetesek feldolgozasa es kidobasa ha mar nem kell
 -- a regiekbol a todokat kiszedni
-- instructions inkabb copy paste legyen
-- iinstruction lehet a kiszedeshez is
-- conversation stack egyfajta todos
+
+conclusions
+- instructions inkabb copy paste legyen nem kell kulon file
+- instruction lehet a conversation kiszedeshez is
+- Az összes guideline, sablon, improvement log legyen úgy írva, hogy mind ember, mind AI könnyen értelmezze, bővítse, használja.
 
 
-topics branches
-- note interpreter
--- main topic: prompt teszteles, kialakitas
+topics I solve
+- lifeOS
+-- note interpreter
+--- prompt engineering
 
 
 
@@ -28,6 +39,7 @@ important
 
 nice
 - kipucolni a rootot, mi mire valo
+- minden folderben _overview, _improve (vagy todo?, vagy backlog?)
 
 useful
 - conversation todos todok

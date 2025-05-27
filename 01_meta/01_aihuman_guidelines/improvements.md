@@ -1,1 +1,0 @@
-- merge together best practices among solutions
