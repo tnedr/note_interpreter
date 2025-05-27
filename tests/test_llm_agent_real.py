@@ -52,7 +52,7 @@ def pretty_print_output(output):
     except Exception:
         print(output)
 
-@pytest.mark.llm
+@pytest.mark.llm_required
 def test_agent_real_llm():
     """
     Real LLM/system test: runs the agent with real LLM, notes, memory, and classification config.
@@ -82,7 +82,7 @@ def test_agent_real_llm():
         assert isinstance(entry.clarity_score, int)
         assert 0 <= entry.clarity_score <= 100
 
-@pytest.mark.llm
+@pytest.mark.llm_required
 def test_agent_real_llm_clarification():
     """
     Real LLM/system test: runs the agent with an ambiguous note to trigger clarification.
@@ -113,7 +113,7 @@ def test_agent_real_llm_clarification():
         assert isinstance(entry.clarity_score, int)
         assert 0 <= entry.clarity_score <= 100
 
-@pytest.mark.llm
+@pytest.mark.llm_required
 def test_agent_real_llm_multiple_notes():
     """
     Real LLM/system test: runs the agent with multiple notes, some ambiguous, some clear.
@@ -148,7 +148,7 @@ def test_agent_real_llm_multiple_notes():
         assert isinstance(entry.clarity_score, int)
         assert 0 <= entry.clarity_score <= 100
 
-@pytest.mark.llm
+@pytest.mark.llm_required
 def test_agent_real_llm_edge_case_empty():
     """
     Real LLM/system test: runs the agent with empty notes and/or memory.
