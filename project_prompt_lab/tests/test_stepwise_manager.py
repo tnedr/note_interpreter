@@ -1,14 +1,11 @@
 import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pytest
+from prompt_lab.libs.stepwise_manager import StepwisePlanManager
 
-# Add libs to sys.path for import
-sys.path.append(str(Path(__file__).resolve().parent.parent / "libs"))
-from stepwise_manager import StepwisePlanManager
-
-AGENT_DIR = Path(__file__).resolve().parent.parent / "agents" / "grocery_clarifier"
+AGENT_DIR = Path(__file__).resolve().parent.parent / "prompt_lab" / "agents" / "grocery_clarifier"
 PLAN_FILE = AGENT_DIR / "plan.yaml"
-
 
 def test_plan_loading():
     plan = StepwisePlanManager(PLAN_FILE)

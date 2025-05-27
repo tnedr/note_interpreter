@@ -1,6 +1,8 @@
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import yaml
 import pytest
-from pathlib import Path
 from prompt_lab.libs.stepwise_manager import StepwisePlanManager
 
 AGENT_DIR = Path(__file__).resolve().parent.parent / "prompt_lab" / "agents" / "grocery_clarifier"
