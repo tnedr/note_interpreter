@@ -332,6 +332,17 @@ class SingleAgent:
                 return True
         return False
 
+# Export SingleAgent as LLMAgent for compatibility
+LLMAgent = SingleAgent
+
+# Explicitly export these for test imports
+__all__ = [
+    "LLMAgent",
+    "LLMOutput",
+    "DataEntry",
+    "load_classification_from_yaml"
+]
+
 if __name__ == "__main__":
     # Example usage
     notes = MemoryManager.load_from_md("docs/examples/example_notes.csv")
