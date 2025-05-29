@@ -19,7 +19,7 @@ input:
 
 model:
   provider: openai
-  name: gpt-4
+  name: gpt-4o-mini
   version: 0613
   temperature: 0.2
   max_tokens: 512
