@@ -16,3 +16,5 @@
 - Elkészült a minimalista teszt pipeline (run_tests.py) az MVP Phase 1-hez: betölti a promptot és tesztesetet, dummy LLM-mel lefuttatja, és ellenőrzi az outputot.
 - Elkészült a StepwisePlanManager MVP váza (libs/stepwise_manager.py): betölti és feldolgozza a stepwise plan-t, listázza a step metaadatokat.
 - Létrehoztam egy új, experiment-alapú plan.yaml-t a grocery_clarifier agenthez, amely experiment_cases-t és bővített YAML struktúrát használ.
+- Végrehajtottam a file_index.md augmentációs instrukcióját, és létrehoztam a file_index_augmented.md-t, minden elemhez rövid magyarázattal.
+- now 2025-05-29

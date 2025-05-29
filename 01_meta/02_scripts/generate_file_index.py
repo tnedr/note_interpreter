@@ -59,9 +59,9 @@ def main():
     """Main function to generate the file index."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.abspath(os.path.join(script_dir, '..', '..'))
-    output_file_path = os.path.join(project_root, '10_meta', 'file_index.md')
+    output_file_path = os.path.join(project_root, '01_meta', 'file_index.md')
     exclude_dirs = SCRIPT_CONFIG["exclude_dirs"]
-    # Külön kezeljük, hogy a scripts és _temp mappa NE legyen kizárva a 10_meta-ból
+    # Külön kezeljük, hogy a scripts és _temp mappa NE legyen kizárva a 01_meta-ból
     exclude_dirs = [d for d in exclude_dirs if not (d in ['scripts', '_temp'] and os.path.basename(os.path.dirname(script_dir)) == '10_meta')]
     file_index_title = SCRIPT_CONFIG["file_index_title"]
 

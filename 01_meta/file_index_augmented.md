@@ -1,0 +1,184 @@
+---
+modified: 2025-05-29
+# Augmented: minden elemhez rövid magyarázat
+# Az eredeti file_index.md alapján generálva
+#
+title: "Project File Index (Augmented)"
+tags: [index, project_files, structure, augmented]
+overview: "This document lists all files and folders in the project, with a short description for each."
+---
+
+## Table of Contents
+- [Project Root](#project-root)
+
+## Project Root
+- .gitignore  # Git beállítások kizárása verziókezelésből
+- 01_meta (folder)  # Meta-információk, dokumentációk, scriptek
+  - 01_aihuman_guidelines (folder)  # AI-human együttműködés irányelvei
+    - _overview.md  # Áttekintő dokumentum
+    - folder_structure_and_naming_guidelines.md  # Mappa- és elnevezési szabályok
+    - general_notes.md  # Általános jegyzetek
+    - sessions_meta_structure.md  # Szekciók meta-struktúrája
+  - 02_scripts (folder)  # Segédscriptek
+    - add_seen_by_human_field.py  # Python script, metaadat hozzáadása
+    - generate_file_index.py  # Python script, fájlindex generálása
+  - 03_cursor_agent_instructions (folder)  # Cursor agent utasítások
+    - 01_general_guidelines.md  # Általános irányelvek
+    - _improve.md  # Javítási javaslatok
+    - instruction_file_index_augmented.md  # Fájlindex augmentációs instrukció
+    - instruction_overview_folder.md  # Mappa áttekintő instrukció
+  - 11_cursor_agent_results (folder)  # Agent eredmények
+    - output_content_modifications copy.md  # Output módosítások másolata
+  - 91_templates (folder)  # Sablonok
+    - _improve_template.md  # Javítási sablon
+    - _overview_template.md  # Áttekintő sablon
+  - customGPTs (folder)  # Egyedi GPT-k leírásai
+    - session_master_AI.md  # Session master AI leírás
+    - session_master_AI_v2.md  # Session master AI v2 leírás
+  - important.md  # Fontos jegyzetek
+  - sessions (folder)  # Munkamenet naplók
+    - _session_dashboard.md  # Dashboard
+    - _session_tree.md  # Szekciófa
+    - session_2025-05-27__meta-session-structure.md  # Meta session struktúra
+    - session_20250527051_sessionmanager_customgpt.md  # Session manager custom GPT
+    - session_202505270831_promptlab_docs_structure_implementation_plan.md  # Promptlab docs implementációs terv
+  - thoughtlines.md  # Gondolatmenetek
+- 10_meta (folder)  # Alternatív meta mappa (régi vagy másik index)
+  - file_index.md  # Fájlindex (régi vagy alternatív)
+- Pipfile  # Python projekt függőségek (Pipenv)
+- Pipfile.lock  # Függőségek zárolt verziói
+- README.md  # Projekt áttekintő
+- ai_human_collab (folder)  # AI-human kollaborációs anyagok
+  - README.md  # Kollaborációs áttekintő
+  - ai_observations.md  # AI megfigyelések
+  - discussion.md  # Megbeszélések
+  - journal.md  # Kollaborációs napló
+  - project_stepwise_cursor_agent (folder)  # Stepwise agent anyagok
+    - example.txt  # Példa fájl
+    - stepwise_ai_instructions.md  # Stepwise AI utasítások
+    - stepwise_ai_test_example.md  # Stepwise AI teszt példa
+- aihuman_journal (folder)  # AI-human projekt napló
+  - journal.md  # Fő napló
+- demo (folder)  # Demó scriptek
+  - log_color_demo.py  # Log színezés demó
+  - run_clarify_and_score_demo.py  # Clarify & score demó
+  - run_llm_agent_demo.py  # LLM agent demó
+- docs (folder)  # Dokumentációk
+  - AI_project_overview.md  # AI projekt áttekintő
+  - agent_building_guidelines.md  # Agent fejlesztési irányelvek
+  - agent_test_plan_template.md  # Teszt terv sablon
+  - ai_human_rules.md  # AI-human szabályok
+  - examples (folder)  # Példák
+    - example_classification.yaml  # Példa osztályozás
+    - example_notes.csv  # Példa jegyzetek
+    - example_user_memory.md  # Példa user memória
+  - file_index.md  # Dokumentációs fájlindex
+  - functional_specification.md  # Funkcionális specifikáció
+  - implementation_plan.md  # Implementációs terv
+  - index.md  # Dokumentáció index
+  - master_plan_implementation_steps.md  # Master terv lépések
+  - multi_agent_system_master_plan.md  # Multi-agent rendszerterv
+  - prompt_builder_usage.md  # Prompt builder használat
+  - prompt_design_guidelines.md  # Prompt tervezési irányelvek
+  - regression_harness.md  # Regressziós tesztelés
+  - system_overview.md  # Rendszer áttekintő
+  - technical_specification.md  # Technikai specifikáció
+- logs (folder)  # Log fájlok
+  - clarify_and_score_demo.log  # Clarify & score demó log
+  - clarify_and_score_demo_2025-05-22_22-48-18.log  # Clarify & score demó log (dátummal)
+  - llm_agent_debug.log  # LLM agent debug log
+  - llm_agent_debug_2025-05-22_20-59-23.log  # LLM agent debug log (dátummal)
+  - llm_agent_debug_2025-05-22_22-17-41.log  # LLM agent debug log (dátummal)
+- main.py  # Fő futtatható Python script
+- note_interpreter (folder)  # Fő Python modul
+  - __init__.py  # Modul inicializáló
+  - agent_core.py  # Agent maglogika
+  - clarify_and_score_agent.py  # Clarify & score agent
+  - colors.py  # Színek kezelése
+  - io.py  # Input/output kezelő
+  - llm_agent.py  # LLM agent logika
+  - log.py  # Logolás
+  - models.py  # Adatmodellek
+  - prompt_builder.py  # Prompt builder
+  - user_output.py  # Felhasználói output kezelő
+- note_interpreter.egg-info (folder)  # Python csomag metaadatok
+  - PKG-INFO  # Csomag információ
+  - SOURCES.txt  # Forrásfájlok listája
+  - dependency_links.txt  # Függőségek linkjei
+  - requires.txt  # Függőségek
+  - top_level.txt  # Top-level modulok
+- project_prompt_lab (folder)  # Prompt lab projekt
+  - _overview.md  # Áttekintő
+  - docs (folder)  # Dokumentációk
+    - 01_SYSTEM_SPEC.md  # Rendszer specifikáció
+    - 02_FUNCTIONAL_SPEC.md  # Funkcionális specifikáció
+    - 03_TECHNICAL_SPEC.md  # Technikai specifikáció
+    - 04_implementation_plan.md  # Implementációs terv
+    - _improve.md  # Javítási javaslatok
+    - _overview.md  # Áttekintő
+    - guide_testing_strategies_general.md  # Tesztelési stratégiák
+    - plan_grocery_note_clarifier.md  # Grocery note clarifier terv
+    - reference_stepwise_plan_clarify_score_full.md  # Stepwise terv referencia
+    - requirements.txt  # Prompt lab függőségek
+    - template_stepwise_prompt_plan_extended.md  # Stepwise prompt terv sablon
+  - prompt_lab (folder)  # Prompt lab kódok
+    - agents (folder)  # Agentek
+      - README.md  # Agentek áttekintő
+      - _overview.md  # Áttekintő
+      - grocery_clarifier (folder)  # Grocery clarifier agent
+        - attempts_index.yaml  # Kísérletek indexe
+        - experiments (folder)  # Kísérletek
+          - experiment_s1_01.yaml  # S1 kísérlet
+          - experiment_s2_01.yaml  # S2 kísérlet
+          - test_s3_01.yaml  # S3 teszt
+        - logs (folder)  # Logok
+          - s3_v2.1__log.txt  # S3 v2.1 log
+        - outputs (folder)  # Outputok
+          - s3_v2.1__output_01.json  # S3 v2.1 output
+        - plan.yaml  # Grocery clarifier terv
+        - prompts (folder)  # Promtok
+          - s1_v1.yaml  # S1 prompt
+          - s2_v1.yaml  # S2 prompt
+          - s3_v1.yaml  # S3 prompt
+          - s3_v2.1.yaml  # S3 v2.1 prompt
+      - logs (folder)  # Agent logok
+        - v2__log.md  # V2 log
+    - libs (folder)  # Könyvtárak
+      - README.md  # Könyvtár áttekintő
+      - _overview.md  # Áttekintő
+      - agent_core.py  # Agent core modul
+      - colors.py  # Színek kezelése
+      - log.py  # Logolás
+      - prompt_builder.py  # Prompt builder
+      - stepwise_manager.py  # Stepwise manager
+    - other (folder)  # Egyéb
+      - prompts (folder)  # Promptok
+        - _overview.md  # Áttekintő
+        - clarify_v1.yaml  # Clarify prompt
+        - promptfoo.yaml  # Promptfoo konfiguráció
+        - scoring_only_v1.yaml  # Csak scoring prompt
+    - templates (folder)  # Sablonok
+  - tests (folder)  # Tesztek
+    - README.md  # Tesztek áttekintő
+    - _overview.md  # Áttekintő
+- resources (folder)  # Erőforrások
+  - clarify_and_score_agent (folder)  # Clarify & score agent erőforrások
+    - prompt_config.yaml  # Prompt konfiguráció
+    - prompt_config_v1.yaml  # Prompt konfiguráció v1
+    - prompt_config_v2.yaml  # Prompt konfiguráció v2
+  - deprecated_llm_output_schema.yaml  # Elavult LLM output séma
+  - single_agent (folder)  # Single agent erőforrások
+    - agent_parameters.yaml  # Agent paraméterek
+    - entity_types_and_intents.yaml  # Entitás típusok és intenciók
+    - notes_output_schema.yaml  # Jegyzet output séma
+    - prompt_config.yaml  # Prompt konfiguráció
+- run_mvp1_pipeline.py  # MVP1 pipeline futtató script
+- setup.py  # Python csomag setup script
+- test_llm_agent.py  # LLM agent teszt script
+- tests (folder)  # Tesztek
+  - __init__.py  # Teszt modul inicializáló
+  - test_io.py  # IO tesztek
+  - test_llm_agent_real.py  # LLM agent valós teszt
+  - test_log.py  # Log tesztek
+  - test_models.py  # Modellek tesztje
+  - test_prompt_builder.py  # Prompt builder teszt 
