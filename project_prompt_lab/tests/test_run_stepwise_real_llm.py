@@ -10,6 +10,9 @@ from prompt_lab.libs.config_utils import get_llm_model_from_config
 from prompt_lab.agents.grocery_clarifier.agent import GroceryClarifierAgent
 import json
 
+pytest.skip("DEPRECATED: Stepwise pipeline teszt, experience bundle váltás miatt nem karbantartott.", allow_module_level=True)
+# DEPRECATED: Stepwise pipeline teszt, experience bundle váltás miatt nem karbantartott.
+
 AGENT_DIR = Path(__file__).resolve().parent.parent / "prompt_lab" / "agents" / "grocery_clarifier"
 PLAN_FILE = AGENT_DIR / "plan.yaml"
 

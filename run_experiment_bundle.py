@@ -22,7 +22,7 @@ class DummyLLM:
         }
 
 # Output validátor importálása
-from project_prompt_lab.prompt_lab.libs.output_validator import validate_output
+from prompt_lab.libs.output_validator import validate_output
 
 def load_bundle(bundle_path: str) -> Dict[str, Any]:
     with open(bundle_path, 'r', encoding='utf-8') as f:

@@ -27,3 +27,6 @@
 
 - Kiegészítettem a TECHNICAL_SPEC.md-t egy explicit experiment bundle workflow folyamatábrával, egy mező-összehasonlító táblázattal és egy YAML példával, hogy a bundle → result_bundle átmenet teljesen egyértelmű legyen.
 - now 2024-06-07
+
+- Létrehoztam egy agent-barát run_tests_safe.py scriptet a project_prompt_lab alprojektben, és kiegészítettem a HOW_TO_RUN_TESTS.md-t a használatával kapcsolatos útmutatóval.
+- A stepwise pipeline-hoz tartozó régi teszteket deprecated státuszba helyeztem, és a HOW_TO_RUN_TESTS.md-t frissítettem, hogy jelezze az experience bundle workflow az aktuális.

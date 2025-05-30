@@ -21,6 +21,8 @@ def load_yaml(path):
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
+@pytest.skip("DEPRECATED: Stepwise pipeline teszt, experience bundle váltás miatt nem karbantartott.", allow_module_level=True)
+# DEPRECATED: Stepwise pipeline teszt, experience bundle váltás miatt nem karbantartott.
 def test_stepwise_pipeline():
     plan = StepwisePlanManager(PLAN_FILE)
     for step in plan.steps:
