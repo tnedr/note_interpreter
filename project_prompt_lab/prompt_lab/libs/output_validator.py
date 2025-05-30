@@ -39,8 +39,8 @@ Future: ValidationProfile support (YAML-serializable rule set)
 import json
 
 def validate_output(
-    output: dict,
-    expected: dict,
+    output,
+    expected,
     strict=False,
     partial=False,
     ignore_fields=None,
@@ -48,10 +48,50 @@ def validate_output(
     custom_comparators=None
 ) -> dict:
     """
-    Rugalmas dict összehasonlító, részleges egyezés, típusellenőrzés, ignore lista, custom comparator támogatással.
+    Rugalmas dict/list összehasonlító, részleges egyezés, típusellenőrzés, ignore lista, custom comparator támogatással.
+    Ha az output vagy expected lista, akkor páronként validál, és warningot ad, ha eltér a hossz vagy a típus.
     """
     ignore_fields = ignore_fields or []
     custom_comparators = custom_comparators or {}
+
+    # --- ÚJ: lista támogatás ---
+    if isinstance(expected, list):
+        if not isinstance(output, list):
+            return {
+                "status": "warning",
+                "message": "Expected a list, but got a different type.",
+                "expected_type": "list",
+                "actual_type": type(output).__name__,
+                "full_match": False
+            }
+        results = []
+        min_len = min(len(expected), len(output))
+        for i in range(min_len):
+            res = validate_output(
+                output[i], expected[i], strict=strict, partial=partial,
+                ignore_fields=ignore_fields, type_check=type_check, custom_comparators=custom_comparators
+            )
+            results.append(res)
+        # Ha eltér a hossz, warning
+        if len(expected) != len(output):
+            status = "warning"
+            message = f"List length mismatch: expected {len(expected)}, got {len(output)}. Only first {min_len} compared."
+        else:
+            status = "passed" if all(r.get("full_match") for r in results) else "failed"
+            message = ""
+        return {
+            "status": status,
+            "message": message,
+            "results": results,
+            "full_match": status == "passed"
+        }
+    # --- Dict támogatás (alapértelmezett) ---
+    if not isinstance(expected, dict) or not isinstance(output, dict):
+        return {
+            "status": "warning",
+            "message": f"Expected dict, got {type(expected).__name__} vs {type(output).__name__}",
+            "full_match": False
+        }
     missing_fields = []
     mismatches = []
     unexpected_fields = []

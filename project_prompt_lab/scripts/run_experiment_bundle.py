@@ -48,18 +48,18 @@ def load_prompt(prompt_section: Dict[str, Any], base_dir: Path) -> str:
     else:
         raise ValueError("No prompt text or source specified.")
 
-def load_input(input_section: Dict[str, Any], base_dir: Path) -> Dict[str, Any]:
+def load_input(input_section: Dict[str, Any], base_dir: Path) -> Any:
     fmt = input_section.get('format', 'yaml')
     content = input_section.get('content')
     if fmt == 'yaml':
         return content
     elif fmt == 'csv':
         csv_path = base_dir / content['file']
-        import csv
         with open(csv_path, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            # Csak az első sort vesszük (egyes input)
-            return next(reader)
+            # Fejléc nélkül, minden sort egy listába
+            lines = [line.strip() for line in f if line.strip()]
+        # Egyetlen stringként adja vissza, sortöréssel elválasztva
+        return '\n'.join(lines)
     else:
         raise ValueError(f"Unsupported input format: {fmt}")
 
@@ -114,13 +114,18 @@ def main(bundle_path: str):
             if isinstance(cls, type) and name.endswith('Agent')
         )
         # PromptBuilder-rel generált system prompt
-        context = bundle['input']['content']
+        # Ha batch CSV input, akkor a promptban {csv}-t cseréljük input_data-ra
+        if bundle['input']['format'] == 'csv' and '{csv}' in prompt:
+            prompt_filled = prompt.replace('{csv}', input_data)
+            context = {'csv': input_data}
+        else:
+            prompt_filled = prompt
+            context = bundle['input']['content']
         prompt_config_path = bundle['prompt'].get('config_path')
         if prompt_config_path:
             system_prompt = PromptBuilder.build(context, prompt_config_path)
         else:
-            # Ha nincs külön config, a bundle prompt text-et használjuk
-            system_prompt = bundle['prompt']['text']
+            system_prompt = prompt_filled
         # Initial user message a bundle-ből (ha nincs, legyen üres string)
         initial_message = bundle.get('initial_message', "")
         log.info(f"System prompt (PromptBuilder):\n{system_prompt}")
