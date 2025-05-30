@@ -24,3 +24,6 @@
 
 - Frissítettem a TECHNICAL_SPEC.md könyvtárszerkezet szekcióját, hogy az agents/<agent>/ alatt számozott, dedikált alkönyvtárak (01_prompts, 02_inputs, 03_experiment_bundles, 04_actual_outputs, 05_logs) szerepeljenek.
 - now 2024-06-07
+
+- Kiegészítettem a TECHNICAL_SPEC.md-t egy explicit experiment bundle workflow folyamatábrával, egy mező-összehasonlító táblázattal és egy YAML példával, hogy a bundle → result_bundle átmenet teljesen egyértelmű legyen.
+- now 2024-06-07
