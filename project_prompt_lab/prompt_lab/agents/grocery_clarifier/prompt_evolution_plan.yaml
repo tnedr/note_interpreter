@@ -1,0 +1,103 @@
+agent: GroceryClarifierAgent
+meta:
+  author: human
+  created: 2025-05-30
+  status: draft
+  description: Human-driven stepwise plan for clarification of grocery notes
+
+goal:
+  description: >
+    A felhasználó által írt bevásárló jegyzetekből, a feltett kérdésekre adott válaszokból
+    és a hosszú távú memóriából automatikusan, strukturált, egyértelmű, LLM-barát
+    feldolgozott jegyzetet generáljunk.
+
+input:
+  - name: raw_notes
+    description: "Nyers jegyzetek, a felhasználótól származó szabad szövegű bevásárló elemek."
+    format: "CSV, mezők: id,note"
+    example: |
+      id,note
+      1,2x milk
+      2,juice?
+      3,eggs
+
+  - name: memory_context
+    description: "Hosszú távú memória kontextus, korábbi viselkedés vagy preferenciák."
+    format: "CSV, egyetlen mező: memory_item"
+    example: |
+      memory_item
+      Zsíros tejet szeretnék.
+      Tojásból mindig sokat veszek.
+
+  - name: clarification_qna
+    description: "Korábban feltett kérdések és a felhasználó válaszai, az egyes jegyzetek tisztázására."
+    format: "CSV, mezők: note_id,question,answer"
+    example: |
+      note_id,question,answer
+      2,Milyen fajta juice-ra gondoltál?,Narancslé
+      3,Organikus legyen a tojás?,Igen
+
+output:
+  - name: processed_notes
+    description: "Feldolgozott jegyzetek strukturált, LLM-barát változata."
+    format: "CSV, mezők: id,note,clarified_note,clarity_score,new_clarification_question"
+    example: |
+      id,note,clarified_note,clarity_score,new_clarification_question
+      1,2x milk,2x milk,95,
+      2,juice?,1L narancslé,60,Milyen százalékos legyen a narancslé?
+      3,eggs,Organikus tojás,90,
+
+  - name: memory_updates
+    description: "Új memóriabejegyzések, amiket az agent hozzáad a hosszú távú memóriához."
+    format: "CSV, egyetlen mező: memory_item"
+    example: |
+      memory_item
+      Előnyben részesíti az organikus ételeket
+
+steps:
+  - step_name: steps
+    summary:
+      - Scoring (raw_notes input, output: raw_notes + clarity_score)
+      - Clarification (input: raw_notes, output: clarification_qna)
+      - Q&A integration (input: raw_notes + clarification_qna, output: clarified_note + clarity_score + new_clarification_question)
+      - Memory integration (input: raw_notes + clarification_qna + memory_context, output: processed_notes + memory_updates)
+      - Finalization (structured output generation)
+
+  - step_name: scoring
+    goal: "Minden elemhez rendeljünk egy világossági pontszámot."
+    input:
+      name: raw_notes
+      description: "Jegyzetek szöveges formában, strukturálatlanul."
+      format: "CSV, mezők: id,note"
+    expected_output:
+      name: raw_notes_with_score
+      description: "Jegyzetek világossági pontszámmal bővítve."
+      format: "CSV, mezők: id,note,clarity_score"
+    human_review: true
+    notes: "Ez a lépés segít azonosítani, mely elemek lehetnek félreérthetők."
+
+  - step_name: clarification
+    goal: "Tegyük fel a szükséges kérdéseket a homályos elemek tisztázására."
+    input:
+      name: raw_notes_with_score
+      description: "Jegyzetek világossági pontszámmal, alacsony pontszámúakhoz szükséges kérdés."
+      format: "CSV, mezők: id,note,clarity_score"
+    expected_output:
+      name: clarification_qna
+      description: "Jegyzetekhez kapcsolódó kérdés-válasz párok."
+      format: "CSV, mezők: note_id,question,answer"
+    human_review: true
+    notes: "A kérdések célja, hogy pontosabb adatokat kérjünk be a felhasználótól."
+
+  - step_name: final_output
+    goal: "Készítsünk végső, strukturált inputot az LLM számára."
+    input:
+      name: aggregated_inputs
+      description: "Az összes előző bemenet egyesítve."
+      format: "CSV: raw_notes, memory_context, clarification_qna"
+    expected_output:
+      name: final_outputs
+      description: "Feldolgozott jegyzetek és új memóriabejegyzések."
+      format: "CSV: processed_notes, memory_updates"
+    human_review: false
+    notes: "Ez az output fog a további feldolgozás alapjául szolgálni."
