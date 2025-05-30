@@ -18,3 +18,9 @@
 - Létrehoztam egy új, experiment-alapú plan.yaml-t a grocery_clarifier agenthez, amely experiment_cases-t és bővített YAML struktúrát használ.
 - Végrehajtottam a file_index.md augmentációs instrukcióját, és létrehoztam a file_index_augmented.md-t, minden elemhez rövid magyarázattal.
 - now 2025-05-29
+
+- Integráltam az 'Experiment Bundle Architecture' szekciót a TECHNICAL_SPEC.md végére a Prompt Lab projektben.
+- now 2024-06-07
+
+- Frissítettem a TECHNICAL_SPEC.md könyvtárszerkezet szekcióját, hogy az agents/<agent>/ alatt számozott, dedikált alkönyvtárak (01_prompts, 02_inputs, 03_experiment_bundles, 04_actual_outputs, 05_logs) szerepeljenek.
+- now 2024-06-07

@@ -170,19 +170,17 @@ attempts:
 
 ## 🧱 Könyvtárszerkezet (Folder Structure)
 
-A Prompt Lab rendszer fő komponensei a `prompt_lab/` könyvtáron belül helyezkednek el:
+A Prompt Lab rendszer fő komponensei a `prompt_lab/` könyvtáron belül helyezkednek el. Minden agenthez/prompthoz dedikált almappát kell létrehozni az `agents/` alatt, és minden kapcsolódó fájlt az alábbi, számozott alkönyvtárakban kell tárolni:
 
 ```
 prompt_lab/
-├── agents/                # Agent-specifikus mappa
+├── agents/
 │   └── grocery_clarifier/
-│       ├── prompts/      # Prompt sablonok: s<step>_v<version>.yaml
-│       ├── test_cases/   # Tesztfájlok: test_s<step>_XX.yaml
-│       ├── outputs/      # LLM output dumpok
-│       ├── logs/         # Automatikus gépi logok
-│       ├── attempts_index.yaml  # Minden próbálkozás összefoglalója
-│       ├── plan.md       # Stepwise roadmap
-│       └── overview.md   # Leírás az agentről
+│       ├── 01_prompts/            # Prompt sablonok: s<step>_v<version>.yaml
+│       ├── 02_inputs/             # Teszt inputok (YAML, CSV, stb.)
+│       ├── 03_experiment_bundles/ # YAML alapú tesztcsomagok
+│       ├── 04_actual_outputs/     # LLM output dumpok
+│       └── 05_logs/               # Automatikus gépi logok
 ├── libs/                 # Újrafelhasználható Python modulok
 ├── scripts/              # CLI, futtató szkriptek
 ├── docs/                 # Specifikációk, útmutatók
@@ -190,6 +188,8 @@ prompt_lab/
 ├── other/                # Archív, referencia, régi planek stb.
 └── README.md
 ```
+
+**Minden agent/projekt saját, jól elkülönített környezetben dolgozik, így a prompt verziózás, tesztelés és logolás átlátható és visszakereshető.**
 
 ---
 
@@ -253,3 +253,56 @@ attempts:
 Ez a struktúra biztosítja, hogy minden prompt próbálkozás teljes körűen dokumentált és reprodukálható legyen. A step–prompt–attempt láncolat gépi és humán oldalról is nyomon követhető.
 
 *A Prompt Lab rendszer technikai specifikációja ezzel teljes körű támogatást ad a stepwise prompt engineering workflow-hoz.*
+
+## 🧪 Experiment Bundle Architecture
+
+A rendszer YAML-alapú `experiment_bundle` formátummal támogatja a prompt-alapú tesztelést, amely egységesen kezeli a prompt definíciót, inputokat, elvárt kimenetet, modell setupot, validációs eredményeket és logolást.
+
+### 🎯 Cél
+- Átlátható, újrafuttatható prompt tesztek
+- Validáció és QA automatizálása
+- Prompt tuning és összehasonlítás támogatása
+- Teljes log és audit trail biztosítása
+
+### 🧱 Fájlstruktúra
+
+agents/
+grocery_clarifier/
+prompts/
+s1_v1.yaml
+experiment_bundles/
+experiment__step1__tej.yaml
+experiment__step1__tej__result.yaml
+actual_outputs/
+output__step1__tej.json
+logs/
+log__step1__tej.md
+
+### 📄 Fájl szerepkörök
+
+| Fájl / mappa | Tartalom | Megjegyzés |
+|--------------|----------|------------|
+| `experiment__*.yaml` | Prompt + input + expected_output | Futtatás előtt |
+| `experiment__*__result.yaml` | + actual_output + validation + log | Futtatás után generált |
+| `output__*.json` | Csak actual output | Könnyebb batch elemzés |
+| `log__*.md` | Részletes nyers log | Auditáláshoz, debughoz |
+| `prompts/*.yaml` | Paraméterezett prompt templatek | Reuse és snapshot támogatás |
+
+### ⚙️ Runner script
+
+A `run_experiment_bundle.py` script funkciói:
+1. Beolvassa az experiment YAML fájlt
+2. Betölti a promptot (inline vagy fájlból)
+3. Betölti az inputot (YAML vagy CSV)
+4. Inicializálja a LLM modellt a `model` szekció alapján
+5. Lefuttatja a promptot
+6. Összehasonlítja az outputot az `expected_output`-tal
+7. Kitölti a `actual_output`, `validation`, `log` szekciókat
+8. Logol és ment (bundle-be vagy külön fájlba)
+
+### ✅ Kompatibilitás
+
+- A `output_validator.py` validációs függvény teljesen integrálható
+- A jelenlegi logika (`prompt_builder`, `config_utils`, `log`, `user_output`) támogatja az új formátumot
+
+További részletek külön fájlban: `docs/experiment_bundle_spec.md`
