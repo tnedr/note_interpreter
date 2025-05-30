@@ -1,0 +1,24 @@
+id: experiment__test
+step: test_step
+
+prompt:
+  purpose: "Egyszerű teszt prompt"
+  text: |
+    You are a note interpreter. Score the clarity of the note.
+
+input:
+  format: yaml
+  content:
+    note: "teszt jegyzet"
+
+model:
+  provider: dummy
+  name: dummy-llm
+  version: 0.1
+  temperature: 0.0
+  max_tokens: 10
+  system_prompt: "You are a helpful assistant."
+
+expected_output:
+  clarity_score: 50
+  interpreted_text: "TESZT JEGYZET" 
