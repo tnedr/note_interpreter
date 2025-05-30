@@ -306,3 +306,96 @@ A `run_experiment_bundle.py` script funkciói:
 - A jelenlegi logika (`prompt_builder`, `config_utils`, `log`, `user_output`) támogatja az új formátumot
 
 További részletek külön fájlban: `docs/experiment_bundle_spec.md`
+
+### 🔄 Experiment Bundle Workflow – Folyamatábra
+
+```
+experiment_bundle_template.yaml
+      │
+      ▼  (kitöltés, testreszabás)
+experiment__step1__tej.yaml   # Futtatás előtt: input, expected_output
+      │
+      ▼  (runner script futtatás)
+experiment__step1__tej__result.yaml   # Futtatás után: + actual_output, validation, log
+```
+
+### 📝 Mezők összehasonlítása: template → bundle → result_bundle
+
+| Mező              | Template (template.yaml) | Bundle (futtatás előtt) | Result bundle (futtatás után) |
+|-------------------|:-----------------------:|:----------------------:|:-----------------------------:|
+| id                | opcionális              | kötelező                | kötelező                      |
+| step              | opcionális              | kötelező                | kötelező                      |
+| prompt            | opcionális              | kötelező                | kötelező                      |
+| input             | opcionális              | kötelező                | kötelező                      |
+| model             | opcionális              | kötelező                | kötelező                      |
+| expected_output   | opcionális              | kötelező                | kötelező                      |
+| actual_output     | -                       | -                       | kötelező                      |
+| validation        | -                       | -                       | kötelező                      |
+| log               | opcionális              | opcionális              | kötelező                      |
+| meta              | opcionális              | opcionális              | opcionális                    |
+
+### 🧩 Példa: bundle → result_bundle
+
+**Futtatás előtt (bundle):**
+```yaml
+id: experiment__step1__tej
+step: step1
+prompt:
+  purpose: "clarity baseline"
+  source: prompts/s1_v1.yaml
+input:
+  format: yaml
+  content:
+    note: "tej"
+model:
+  provider: openai
+  name: gpt-4
+temperature: 0.2
+max_tokens: 512
+system_prompt: "You are a helpful assistant."
+expected_output:
+  clarity_score: 60
+  interpreted_text: null
+```
+
+**Futtatás után (result_bundle):**
+```yaml
+id: experiment__step1__tej
+step: step1
+prompt:
+  purpose: "clarity baseline"
+  source: prompts/s1_v1.yaml
+input:
+  format: yaml
+  content:
+    note: "tej"
+model:
+  provider: openai
+  name: gpt-4
+temperature: 0.2
+max_tokens: 512
+system_prompt: "You are a helpful assistant."
+expected_output:
+  clarity_score: 60
+  interpreted_text: null
+actual_output:
+  clarity_score: 45
+  interpreted_text: "tej"
+validation:
+  validator_profile: default
+  result:
+    status: failed
+    mismatches:
+      - field: clarity_score
+        expected: 60
+        actual: 45
+log:
+  status: failed
+  path: logs/exp_001__log.md
+meta:
+  author: tamas
+  created_at: "2025-05-29T20:20"
+  tags: ["clarity", "step1", "LLM"]
+```
+
+---
