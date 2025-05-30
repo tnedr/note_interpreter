@@ -1,6 +1,3 @@
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pytest
 from prompt_lab.libs.agent_core_v2 import AgentCoreV2, ToolDefinition
 from langchain_openai import ChatOpenAI

@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 # Load environment variables from .env in the project root
 load_dotenv()
 
-sys.path.append(str(Path(__file__).resolve().parent.parent / "libs"))
 from stepwise_manager import StepwisePlanManager
 from prompt_builder import PromptBuilder
 from prompt_lab.libs.config_utils import get_llm_model_from_config

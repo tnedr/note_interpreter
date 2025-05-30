@@ -1,17 +1,15 @@
-import yaml
-import os
-from pathlib import Path
+# pipenv run python project_prompt_lab/scripts/run_experiment_bundle.py project_prompt_lab/prompt_lab/agents/grocery_clarifier/03_experiment_bundles/experiment_dummy_explicit.yaml
 import sys
+import os
+import yaml
 from typing import Any, Dict
 from datetime import datetime
+from pathlib import Path
 import importlib.util
-from prompt_lab.libs.prompt_builder import PromptBuilder
-from prompt_lab.libs.log import log
+from project_prompt_lab.prompt_lab.libs.prompt_builder import PromptBuilder
+from project_prompt_lab.prompt_lab.libs.log import log
+from project_prompt_lab.prompt_lab.libs.output_validator import validate_output
 
-# Add project_prompt_lab to sys.path for prompt_lab imports
-ROOT = Path(__file__).resolve().parent.parent  # project_prompt_lab
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 # Dummy LLM osztály
 class DummyLLM:
@@ -30,8 +28,7 @@ class DummyLLM:
             "interpreted_text": note.upper() if note else None
         }
 
-# Output validátor importálása
-from prompt_lab.libs.output_validator import validate_output
+
 
 def load_bundle(bundle_path: str) -> Dict[str, Any]:
     with open(bundle_path, 'r', encoding='utf-8') as f:
@@ -179,7 +176,14 @@ def main(bundle_path: str):
     print(f"  Log: {log_path}")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Használat: python run_experiment_bundle.py <bundle.yaml>")
-        sys.exit(1)
-    main(sys.argv[1]) 
+    try:
+        if len(sys.argv) < 2:
+            print("Használat: python run_experiment_bundle.py <bundle.yaml>")
+            sys.exit(1)
+        main(sys.argv[1])
+    except Exception as e:
+        import traceback
+        log.error(f"Hiba a futás során: {e}")
+        traceback.print_exc()
+        print(f"[ERROR] {e}")
+        print("A részletes hibát lásd a logfájlban, ha készült.") 

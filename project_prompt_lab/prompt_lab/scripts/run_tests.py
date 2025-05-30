@@ -1,9 +1,7 @@
 import os
 import yaml
-import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parent.parent / "libs"))
 from prompt_builder import PromptBuilder
 
 # --- Config ---

@@ -1,10 +1,8 @@
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pytest
 pytest.skip("DEPRECATED: Stepwise pipeline teszt, experience bundle váltás miatt nem karbantartott.", allow_module_level=True)
 # DEPRECATED: Stepwise pipeline teszt, experience bundle váltás miatt nem karbantartott.
 from prompt_lab.libs.stepwise_manager import StepwisePlanManager
+from pathlib import Path
 
 AGENT_DIR = Path(__file__).resolve().parent.parent / "prompt_lab" / "agents" / "grocery_clarifier"
 PLAN_FILE = AGENT_DIR / "plan.yaml"
