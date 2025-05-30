@@ -1,4 +1,4 @@
-from prompt_lab.libs.colors import RESET, BOLD, CYAN, YELLOW, MAGENTA, BLUE, GREEN, RED, WHITE
+from project_prompt_lab.prompt_lab.libs.colors import RESET, BOLD, CYAN, YELLOW, MAGENTA, BLUE, GREEN, RED, WHITE
 
 def user_print(message, color=WHITE, bold=False):
     prefix = ""

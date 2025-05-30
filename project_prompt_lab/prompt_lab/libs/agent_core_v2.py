@@ -13,7 +13,7 @@ from datetime import datetime
 from abc import ABC, abstractmethod
 import threading
 import yaml
-from prompt_lab.libs.user_output import user_print, CYAN, YELLOW, MAGENTA, BLUE, GREEN, RED, WHITE, BOLD
+from project_prompt_lab.prompt_lab.libs.user_output import user_print, CYAN, YELLOW, MAGENTA, BLUE, GREEN, RED, WHITE, BOLD
 import json
 
 StateType = TypeVar('StateType', bound=BaseModel)

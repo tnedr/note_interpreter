@@ -1,4 +1,4 @@
-from prompt_lab.libs.agent_core_v2 import AgentCoreV2
+from project_prompt_lab.prompt_lab.libs.agent_core_v2 import AgentCoreV2
 from langchain_openai import ChatOpenAI
 
 class GroceryClarifierAgent(AgentCoreV2):

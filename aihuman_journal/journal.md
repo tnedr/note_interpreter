@@ -1,5 +1,8 @@
 # AI-Human Project Journal
 
+- Eltávolítottam minden sys.path manipulációt a projektből, mostantól minden import kizárólag a helyes package-struktúrát és szerkeszthető installt használ.
+- now 2024-06-09
+
 - A Prompt Lab funkcionális specifikációja bővült a Stepwise Prompt Development Support (3.6) és az Evolution-based Agent Development workflow szekciókkal.
 - A Prompt Lab funkcionális specifikációja bővült a Prompt Attempts & Iterative Learning (Human-in-the-loop support) szekcióval.
 - A Prompt Lab technikai specifikációja bővült az Attempt-level tracking and experience logging, valamint a Prompt Attempt Metadata & Logs szekciókkal.
