@@ -399,3 +399,14 @@ meta:
 ```
 
 ---
+
+## Stepwise prompt evolúció – jelenlegi és jövőbeli workflow
+
+A stepwise (többlépéses, iteratív) prompt evolúció az egész Prompt Lab alapkoncepciójának része. Jelenleg azonban a lépéseket, iterációkat **ember végzi manuálisan** az experience bundle workflow-ban:
+- Minden egyes promptverzió, input, output, log, metaadat egy YAML bundle-ben van.
+- Az iteráció, a prompt módosítása, az új bundle létrehozása, a logolás, a tapasztalatok visszacsatolása most emberi folyamat.
+- A bundle-formátum és a könyvtárszerkezet úgy lett kialakítva, hogy később támogatni lehessen a gépi vagy félig automatizált stepwise prompt evolúciót is (pl. több bundle, több lépés, automatikus logolás, regressziótesztelés).
+
+**Jelenleg tehát a stepwise logika "human-in-the-loop" módon valósul meg, de a rendszer készen áll a későbbi, automatizált stepwise támogatásra is.**
+
+---
