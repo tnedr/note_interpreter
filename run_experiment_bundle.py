@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import sys
 from typing import Any, Dict
+from datetime import datetime
 
 # Dummy LLM osztály
 class DummyLLM:
@@ -76,19 +77,29 @@ def main(bundle_path: str):
     expected_output = bundle.get('expected_output', {})
     validation_result = validate_output(actual_output, expected_output)
 
-    # 6. Bundle frissítése
-    bundle['actual_output'] = actual_output
-    if 'validation' not in bundle:
-        bundle['validation'] = {}
-    bundle['validation']['result'] = validation_result
-    if 'log' not in bundle:
-        bundle['log'] = {}
-    bundle['log']['status'] = validation_result['status']
+    # 6. Log generálása
+    log_path = base_dir / f"../../05_logs/{Path(bundle_path).stem}__log.md"
+    log_content = f"# Log for {Path(bundle_path).stem}\n\nPrompt: {prompt}\n\nInput: {input_data}\n\nActual output: {actual_output}\n\nValidation: {validation_result}\n"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(log_path, "w", encoding="utf-8") as f:
+        f.write(log_content)
 
-    # 7. Mentés
+    # 7. Metaadatok
+    meta = bundle.get('meta', {})
+    meta['last_run'] = datetime.now().isoformat(timespec='seconds')
+    meta['runner'] = os.environ.get('USER', 'runner')
+
+    # 8. Bundle frissítése
+    bundle['actual_output'] = actual_output
+    bundle['validation'] = {'result': validation_result}
+    bundle['log'] = {'status': validation_result['status'], 'path': str(log_path.relative_to(base_dir.parent.parent))}
+    bundle['meta'] = meta
+
+    # 9. Mentés
     save_bundle(bundle_path, bundle)
     print(f"✓ Bundle lefuttatva és frissítve: {bundle_path}")
     print(f"  Status: {validation_result['status']}")
+    print(f"  Log: {log_path}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
