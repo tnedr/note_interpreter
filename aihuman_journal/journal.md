@@ -30,3 +30,5 @@
 
 - Létrehoztam egy agent-barát run_tests_safe.py scriptet a project_prompt_lab alprojektben, és kiegészítettem a HOW_TO_RUN_TESTS.md-t a használatával kapcsolatos útmutatóval.
 - A stepwise pipeline-hoz tartozó régi teszteket deprecated státuszba helyeztem, és a HOW_TO_RUN_TESTS.md-t frissítettem, hogy jelezze az experience bundle workflow az aktuális.
+
+- Minden LLM modell beállítást gpt-4.1-mini-re állítottunk át a kódban és a bundle-okban, hogy elkerüljük a drága modellek véletlen használatát.

@@ -1,26 +1,20 @@
 id: experiment__s1_01
 step: step_01_scoring
+model:
+  type: llm
+  provider: openai
+  name: gpt-4.1-mini
 prompt:
   purpose: Alap clarity scoring prompt
   source: ../../01_prompts/s1_v1.yaml
-  text: 'You are a shopping assistant.
-
+  text: |
+    You are a shopping assistant.
     Evaluate this input and return a clarity score (0–100).
-
     Input: {note}
-
-    '
 input:
   format: yaml
   content:
     note: tej
-model:
-  provider: openai
-  name: gpt-4
-  version: 395
-  temperature: 0.2
-  max_tokens: 512
-  system_prompt: You are a helpful assistant.
 expected_output:
   clarity_score: 60
   interpreted_text: null
@@ -42,7 +36,30 @@ validation:
     full_match: false
 log:
   status: failed
+  path: grocery_clarifier\03_experiment_bundles\..\..\05_logs\experiment_s1_01__log.md
+meta:
+  last_run: '2025-05-30T08:49:35'
+  runner: runner
+
+actual_output:
+  clarity_score: 50
+  interpreted_text: TEJ
+validation:
+  result:
+    status: failed
+    missing_fields: []
+    mismatches:
+    - field: clarity_score
+      expected: 60
+      actual: 50
+    - field: interpreted_text
+      expected: null
+      actual: TEJ
+    unexpected_fields: []
+    full_match: false
+log:
+  status: failed
   path: 05_logs\experiment_s1_01__log.md
 meta:
-  last_run: '2025-05-30T09:53:33'
+  last_run: '2025-05-30T10:53:46'
   runner: runner

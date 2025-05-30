@@ -3,7 +3,7 @@ step: step_01_scoring
 model:
   type: llm
   provider: openai
-  name: gpt-4
+  name: gpt-4.1-mini
 prompt:
   purpose: Alap clarity scoring prompt
   source: ../../01_prompts/s1_v1.yaml
