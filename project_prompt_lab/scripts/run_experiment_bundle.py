@@ -5,6 +5,11 @@ import sys
 from typing import Any, Dict
 from datetime import datetime
 
+# Add project_prompt_lab to sys.path for prompt_lab imports
+ROOT = Path(__file__).resolve().parent.parent  # project_prompt_lab
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 # Dummy LLM osztály
 class DummyLLM:
     """
@@ -77,27 +82,32 @@ def main(bundle_path: str):
     expected_output = bundle.get('expected_output', {})
     validation_result = validate_output(actual_output, expected_output)
 
-    # 6. Log generálása
-    log_path = base_dir / f"../../05_logs/{Path(bundle_path).stem}__log.md"
+    # 6. Log generálása (mindig az agent saját 05_logs mappájába)
+    # Feltételezzük, hogy a bundle_path szerkezete: .../agents/<agent>/03_experiment_bundles/<bundle>.yaml
+    agent_dir = base_dir.parent.parent  # .../agents/<agent>
+    logs_dir = agent_dir / "05_logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    log_path = logs_dir / f"{Path(bundle_path).stem}__log.md"
     log_content = f"# Log for {Path(bundle_path).stem}\n\nPrompt: {prompt}\n\nInput: {input_data}\n\nActual output: {actual_output}\n\nValidation: {validation_result}\n"
-    log_path.parent.mkdir(parents=True, exist_ok=True)
     with open(log_path, "w", encoding="utf-8") as f:
         f.write(log_content)
 
     # 7. Metaadatok
-    meta = bundle.get('meta', {})
+    meta = bundle.get('meta', {}).copy() if 'meta' in bundle else {}
     meta['last_run'] = datetime.now().isoformat(timespec='seconds')
     meta['runner'] = os.environ.get('USER', 'runner')
 
-    # 8. Bundle frissítése
-    bundle['actual_output'] = actual_output
-    bundle['validation'] = {'result': validation_result}
-    bundle['log'] = {'status': validation_result['status'], 'path': str(log_path.relative_to(base_dir.parent.parent))}
-    bundle['meta'] = meta
+    # 8. Result bundle létrehozása (új fájl, __result.yaml utótaggal)
+    result_bundle = bundle.copy()
+    result_bundle['actual_output'] = actual_output
+    result_bundle['validation'] = {'result': validation_result}
+    result_bundle['log'] = {'status': validation_result['status'], 'path': str(log_path.relative_to(agent_dir))}
+    result_bundle['meta'] = meta
 
-    # 9. Mentés
-    save_bundle(bundle_path, bundle)
-    print(f"✓ Bundle lefuttatva és frissítve: {bundle_path}")
+    result_path = Path(bundle_path).with_name(f"{Path(bundle_path).stem}__result.yaml")
+    save_bundle(result_path, result_bundle)
+
+    print(f"✓ Result bundle létrehozva: {result_path}")
     print(f"  Status: {validation_result['status']}")
     print(f"  Log: {log_path}")
 
