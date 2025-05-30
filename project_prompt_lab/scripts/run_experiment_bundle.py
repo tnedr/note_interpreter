@@ -4,6 +4,9 @@ from pathlib import Path
 import sys
 from typing import Any, Dict
 from datetime import datetime
+import importlib.util
+from prompt_lab.libs.prompt_builder import PromptBuilder
+from prompt_lab.libs.log import log
 
 # Add project_prompt_lab to sys.path for prompt_lab imports
 ROOT = Path(__file__).resolve().parent.parent  # project_prompt_lab
@@ -96,22 +99,54 @@ def main(bundle_path: str):
         else:
             raise ValueError("Dummy model-hez kötelező az 'output' vagy 'output_file' mező!")
         llm = DummyLLM(output=dummy_output)
+        actual_output = llm.run(prompt, input_data)
     elif model['type'] == 'llm':
         if 'provider' not in model or 'name' not in model:
             raise ValueError("LLM model-hez kötelező a 'provider' és 'name' mező!")
-        # Itt később lehet igazi LLM inicializáció
-        llm = DummyLLM()  # ideiglenesen
+        # Dinamikus agent import az agent könyvtárból
+        agent_dir = base_dir.parent  # .../agents/<agent>
+        agent_py = agent_dir / 'agent.py'
+        if not agent_py.exists():
+            raise FileNotFoundError(f"Nem található agent.py: {agent_py}")
+        spec = importlib.util.spec_from_file_location("agent_module", str(agent_py))
+        agent_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(agent_module)
+        # Az első olyan osztály, ami 'Agent'-re végződik
+        agent_class = next(
+            cls for name, cls in vars(agent_module).items()
+            if isinstance(cls, type) and name.endswith('Agent')
+        )
+        # PromptBuilder-rel generált system prompt
+        context = bundle['input']['content']
+        prompt_config_path = bundle['prompt'].get('config_path')
+        if prompt_config_path:
+            system_prompt = PromptBuilder.build(context, prompt_config_path)
+        else:
+            # Ha nincs külön config, a bundle prompt text-et használjuk
+            system_prompt = bundle['prompt']['text']
+        # Initial user message a bundle-ből (ha nincs, legyen üres string)
+        initial_message = bundle.get('initial_message', "")
+        log.info(f"System prompt (PromptBuilder):\n{system_prompt}")
+        log.info(f"Initial user message: {initial_message}")
+        agent = agent_class(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            llm_model=model['name'],
+            system_prompt=system_prompt
+        )
+        response = agent.handle_user_message(initial_message)
+        actual_output = {
+            'display_message': response.get('display_message'),
+            'parsed_response': response.get('parsed_response'),
+            'raw_response': response.get('raw_response')
+        }
     else:
         raise ValueError(f"Ismeretlen model.type: {model['type']}")
 
-    # 4. Lefuttatás
-    actual_output = llm.run(prompt, input_data)
-
-    # 5. Validáció
+    # 4. Validáció
     expected_output = bundle.get('expected_output', {})
     validation_result = validate_output(actual_output, expected_output)
 
-    # 6. Log generálása (mindig az agent saját 05_logs mappájába)
+    # 5. Log generálása (mindig az agent saját 05_logs mappájába)
     agent_dir = base_dir.parent  # .../agents/<agent>
     logs_dir = agent_dir / "05_logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
@@ -120,12 +155,12 @@ def main(bundle_path: str):
     with open(log_path, "w", encoding="utf-8") as f:
         f.write(log_content)
 
-    # 7. Metaadatok
+    # 6. Metaadatok
     meta = bundle.get('meta', {}).copy() if 'meta' in bundle else {}
     meta['last_run'] = datetime.now().isoformat(timespec='seconds')
     meta['runner'] = os.environ.get('USER', 'runner')
 
-    # 8. Result bundle létrehozása (eredeti YAML + result szekciók)
+    # 7. Result bundle létrehozása (eredeti YAML + result szekciók)
     result_sections = {
         'actual_output': actual_output,
         'validation': {'result': validation_result},

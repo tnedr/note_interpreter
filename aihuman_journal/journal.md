@@ -32,3 +32,5 @@
 - A stepwise pipeline-hoz tartozó régi teszteket deprecated státuszba helyeztem, és a HOW_TO_RUN_TESTS.md-t frissítettem, hogy jelezze az experience bundle workflow az aktuális.
 
 - Minden LLM modell beállítást gpt-4.1-mini-re állítottunk át a kódban és a bundle-okban, hogy elkerüljük a drága modellek véletlen használatát.
+
+- A bundle runner mostantól PromptBuilder-rel generálja a system promptot, a bundle initial_message mezőjét küldi user üzenetként, a logolás a log.py singletonnal történik, és az input context teljesen dinamikus.

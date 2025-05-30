@@ -13,7 +13,8 @@ prompt:
 input:
   format: yaml
   content:
-    note: "teszt file"
+    note: teszt file
+initial_message: ""
 expected_output:
   clarity_score: 77
-  interpreted_text: "FILE_DUMMY" 
+  interpreted_text: FILE_DUMMY 

@@ -410,3 +410,74 @@ A stepwise (többlépéses, iteratív) prompt evolúció az egész Prompt Lab al
 **Jelenleg tehát a stepwise logika "human-in-the-loop" módon valósul meg, de a rendszer készen áll a későbbi, automatizált stepwise támogatásra is.**
 
 ---
+
+## Experiment Bundle Runner – Implementation Details (2025-05-30)
+
+### 🛠️ Fő lépések
+1. **Bundle beolvasása**: A runner beolvassa a kiválasztott experiment bundle YAML-t.
+2. **Input context**: A bundle `input.content` mezője lesz a PromptBuilder contextje (bármilyen kulcs-érték páros támogatott, nincs beégetett mező).
+3. **Prompt generálás**: A PromptBuilder-rel generáljuk a system promptot:
+    - Ha van `prompt.config_path`, azt használjuk (szekció-alapú, registry-s prompt).
+    - Ha nincs, a bundle `prompt.text` mezőjét használjuk.
+4. **Initial user message**: A bundle `initial_message` mezője (ha van) lesz az első user üzenet az agent sessionben. Ha nincs, üres stringet küldünk.
+5. **Dinamikus agent import**: A runner automatikusan importálja azt az `agent.py`-t, ami abban az agent könyvtárban van, ahol a bundle található. Az első olyan osztályt példányosítja, ami `Agent`-re végződik.
+6. **Agent példányosítás**: Az agent példányosítása a következő paraméterekkel történik:
+    - `api_key`: környezeti változóból (pl. `OPENAI_API_KEY`)
+    - `llm_model`: a bundle model.name mezője
+    - `system_prompt`: a PromptBuilder-rel generált prompt
+7. **LLM hívás**: Az agent `handle_user_message(initial_message)` metódusával történik a futtatás.
+8. **Logolás**: Minden logolás a `log.py` singleton loggert használja, a logfájl az agent saját logmappájába kerül.
+9. **Result bundle generálás**: Az eredeti bundle-hoz hozzáfűzzük az actual_output, validation, log, meta szekciókat, és új fájlba mentjük.
+
+### ⚡️ Edge case-ek, best practice
+- Több input mező: a PromptBuilder contextje bármennyi mezőt támogat, a prompt template határozza meg, melyik placeholder hova kerül.
+- initial_message hiánya: ha nincs, üres stringet küldünk user üzenetként.
+- Agent import: mindig a bundle helye alapján, nincs beégetett agent név.
+- Logolás: minden lépés logolható, a log.py log singletonnal, szint és célfájl is állítható.
+- Dummy/LLM váltás: a model.type mező alapján, dummy esetén explicit output kell.
+
+### 📝 Példa bundle (részlet)
+```yaml
+id: experiment__s1_01
+step: step_01_scoring
+prompt:
+  text: |
+    You are a shopping assistant.\nEvaluate this input and return a clarity score (0–100).\nInput: {note}
+input:
+  format: yaml
+  content:
+    note: tej
+    memory: "előző vásárlás: kenyér"
+model:
+  type: llm
+  provider: openai
+  name: gpt-4.1-mini
+initial_message: ""
+expected_output:
+  clarity_score: 60
+  interpreted_text: null
+```
+
+### 🔄 Folyamatábra
+```
+experiment_bundle.yaml
+   │
+   ▼
+PromptBuilder (context: input.content)
+   │
+   ▼
+system_prompt → agent.py (dinamikus import)
+   │
+   ▼
+agent.handle_user_message(initial_message)
+   │
+   ▼
+actual_output, validation, log → result_bundle.yaml
+```
+
+### 🔍 Hibakezelés, extensibility
+- Hiányzó mezők, hibás input: a runner minden hibát logol, a bundle futás nem áll le, csak warning/error logot generál.
+- Új agent/projekt: csak új agent.py és bundle kell, minden más automatikusan működik.
+- Prompt evolúció: a PromptBuilder és a bundle formátum teljesen támogatja a stepwise/human-in-the-loop prompt fejlesztést.
+
+---

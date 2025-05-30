@@ -14,6 +14,7 @@
 - [x] Bundle workflow: lossless result bundle generálás, auditálható, diffelhető formátum
 - [x] Dummy output: bundle-onként explicit output YAML-ból vagy fájlból
 - [x] Logolás: minden bundle futás logja az agent saját logmappájába kerül
+- [x] Runner: PromptBuilder-rel generált system prompt, bundle inputból context, initial_message támogatás, log.py loggert használja
 
 ---
 

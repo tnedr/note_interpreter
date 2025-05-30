@@ -15,10 +15,11 @@ prompt:
 input:
   format: yaml
   content:
-    note: "teszt dummy"
+    note: teszt dummy
+initial_message: ""
 expected_output:
   clarity_score: 42
-  interpreted_text: "DUMMY"
+  interpreted_text: DUMMY
 dummy_output:
   clarity_score: 42
   interpreted_text: "DUMMY" 

@@ -15,6 +15,7 @@ input:
   format: yaml
   content:
     note: tej
+initial_message: ""
 expected_output:
   clarity_score: 60
   interpreted_text: null

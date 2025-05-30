@@ -53,3 +53,5 @@ meta:
   author: TODO_author
   created_at: "TODO_timestamp (pl. 2025-05-29T20:30)"
   tags: ["TODO", "clarity", "note_interpreter"]
+
+initial_message: ""  # vagy pl. "Kérem, értelmezze az alábbi jegyzetet!"
