@@ -1,6 +1,10 @@
 id: experiment__dummy_explicit
 step: step_dummy
-llm_type: dummy
+model:
+  type: dummy
+  output:
+    clarity_score: 42
+    interpreted_text: "DUMMY"
 prompt:
   purpose: Dummy explicit output test
   source: ../../01_prompts/s1_v1.yaml

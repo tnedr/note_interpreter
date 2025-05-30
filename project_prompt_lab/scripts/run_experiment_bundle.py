@@ -73,15 +73,17 @@ def main(bundle_path: str):
     # 2. Input betöltése
     input_data = load_input(bundle['input'], base_dir)
 
-    # 3. LLM inicializálása (dummy: explicit output kötelező)
-    llm_type = bundle.get('llm_type', 'dummy')
-    dummy_output = None
-    if llm_type == 'dummy':
-        if 'dummy_output' in bundle:
-            dummy_output = bundle['dummy_output']
-        elif 'dummy_output_file' in bundle:
-            dummy_output_path = base_dir / bundle['dummy_output_file']
-            if dummy_output_path.suffix.lower() == '.yaml' or dummy_output_path.suffix.lower() == '.yml':
+    # 3. LLM inicializálása (új séma szerint)
+    model = bundle.get('model')
+    if not model or 'type' not in model:
+        raise ValueError("A bundle 'model' mezője kötelező, és tartalmaznia kell a 'type'-ot!")
+    if model['type'] == 'dummy':
+        dummy_output = None
+        if 'output' in model:
+            dummy_output = model['output']
+        elif 'output_file' in model:
+            dummy_output_path = base_dir / model['output_file']
+            if dummy_output_path.suffix.lower() in ('.yaml', '.yml'):
                 with open(dummy_output_path, 'r', encoding='utf-8') as f:
                     dummy_output = yaml.safe_load(f)
             elif dummy_output_path.suffix.lower() == '.csv':
@@ -90,13 +92,17 @@ def main(bundle_path: str):
                     reader = csv.DictReader(f)
                     dummy_output = next(reader)
             else:
-                raise ValueError(f"Unsupported dummy_output_file format: {dummy_output_path.suffix}")
+                raise ValueError(f"Unsupported dummy output_file format: {dummy_output_path.suffix}")
         else:
-            raise ValueError("Dummy LLM-hez explicit dummy_output vagy dummy_output_file szükséges a bundle-ban!")
+            raise ValueError("Dummy model-hez kötelező az 'output' vagy 'output_file' mező!")
         llm = DummyLLM(output=dummy_output)
-    else:
+    elif model['type'] == 'llm':
+        if 'provider' not in model or 'name' not in model:
+            raise ValueError("LLM model-hez kötelező a 'provider' és 'name' mező!")
         # Itt később lehet igazi LLM inicializáció
         llm = DummyLLM()  # ideiglenesen
+    else:
+        raise ValueError(f"Ismeretlen model.type: {model['type']}")
 
     # 4. Lefuttatás
     actual_output = llm.run(prompt, input_data)
