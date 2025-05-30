@@ -2,30 +2,30 @@ id: experiment__dummy_explicit
 step: step_dummy
 model:
   type: dummy
-  output: &id001
+  output:
     clarity_score: 42
-    interpreted_text: DUMMY
+    interpreted_text: "DUMMY"
 prompt:
   purpose: Dummy explicit output test
   source: ../../01_prompts/s1_v1.yaml
-  text: 'You are a shopping assistant.
-
+  text: |
+    You are a shopping assistant.
     Evaluate this input and return a clarity score (0–100).
-
     Input: {note}
-
-    '
 input:
   format: yaml
   content:
-    note: teszt dummy
+    note: "teszt dummy"
 expected_output:
   clarity_score: 42
-  interpreted_text: DUMMY
+  interpreted_text: "DUMMY"
 dummy_output:
   clarity_score: 42
+  interpreted_text: "DUMMY"
+
+actual_output:
+  clarity_score: 42
   interpreted_text: DUMMY
-actual_output: *id001
 validation:
   result:
     status: passed
@@ -37,5 +37,5 @@ log:
   status: passed
   path: 05_logs\experiment_dummy_explicit__log.md
 meta:
-  last_run: '2025-05-30T10:22:43'
+  last_run: '2025-05-30T10:49:50'
   runner: runner

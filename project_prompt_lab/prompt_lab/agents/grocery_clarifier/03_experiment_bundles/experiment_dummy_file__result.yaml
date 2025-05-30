@@ -16,4 +16,21 @@ input:
     note: "teszt file"
 expected_output:
   clarity_score: 77
-  interpreted_text: "FILE_DUMMY" 
+  interpreted_text: "FILE_DUMMY"
+
+actual_output:
+  clarity_score: 77
+  interpreted_text: FILE_DUMMY
+validation:
+  result:
+    status: passed
+    missing_fields: []
+    mismatches: []
+    unexpected_fields: []
+    full_match: true
+log:
+  status: passed
+  path: 05_logs\experiment_dummy_file__log.md
+meta:
+  last_run: '2025-05-30T10:48:37'
+  runner: runner

@@ -112,7 +112,6 @@ def main(bundle_path: str):
     validation_result = validate_output(actual_output, expected_output)
 
     # 6. Log generálása (mindig az agent saját 05_logs mappájába)
-    # Feltételezzük, hogy a bundle_path szerkezete: .../agents/<agent>/03_experiment_bundles/<bundle>.yaml
     agent_dir = base_dir.parent  # .../agents/<agent>
     logs_dir = agent_dir / "05_logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
@@ -126,15 +125,19 @@ def main(bundle_path: str):
     meta['last_run'] = datetime.now().isoformat(timespec='seconds')
     meta['runner'] = os.environ.get('USER', 'runner')
 
-    # 8. Result bundle létrehozása (új fájl, __result.yaml utótaggal)
-    result_bundle = bundle.copy()
-    result_bundle['actual_output'] = actual_output
-    result_bundle['validation'] = {'result': validation_result}
-    result_bundle['log'] = {'status': validation_result['status'], 'path': str(log_path.relative_to(agent_dir))}
-    result_bundle['meta'] = meta
-
+    # 8. Result bundle létrehozása (eredeti YAML + result szekciók)
+    result_sections = {
+        'actual_output': actual_output,
+        'validation': {'result': validation_result},
+        'log': {'status': validation_result['status'], 'path': str(log_path.relative_to(agent_dir))},
+        'meta': meta
+    }
+    result_yaml = yaml.dump(result_sections, allow_unicode=True, sort_keys=False)
+    with open(bundle_path, 'r', encoding='utf-8') as f:
+        original_yaml = f.read().rstrip()
     result_path = Path(bundle_path).with_name(f"{Path(bundle_path).stem}__result.yaml")
-    save_bundle(result_path, result_bundle)
+    with open(result_path, 'w', encoding='utf-8') as f:
+        f.write(original_yaml + '\n\n' + result_yaml)
 
     print(f"✓ Result bundle létrehozva: {result_path}")
     print(f"  Status: {validation_result['status']}")
