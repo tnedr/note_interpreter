@@ -137,6 +137,42 @@ agents/grocery_clarifier/step_01_scoring/
 
 ---
 
+### 🟣 Phase 4 – Prompt Evolution Plan & HITL/AI-ready Workflow
+
+#### Teendők
+
+* Bevezetni a Prompt Evolution Plan (PEP) formátumot minden agenthez:
+  * Végcél, input/output példák, stepwise workflow, tesztesetek egy YAML dokumentumban
+  * Human-in-the-loop (HITL) workflow: minden lépés, validáció, döntés ember által történik
+  * A formátum és a rendszer úgy van kialakítva, hogy hosszabb távon AI is képes legyen automatikusan generálni, módosítani vagy végrehajtani a plan-t és a workflow-t (AI-ready)
+* Prompt sablonok, bundle-ök, stepwise tesztek generálása a PEP alapján
+* Runner script vagy UI támogatás a PEP stepwise végigviteléhez
+* Tapasztalati logolás, metaadatok, review státuszok kezelése
+
+#### MVP cél
+
+✅ Minden agenthez van Prompt Evolution Plan, amely alapján stepwise bundle-ök, tesztek, logok generálhatók, a workflow teljesen HITL, de AI-ready.
+
+---
+
+### 🟣 Phase 5 – Function Call / Tool Usage Integration
+
+#### Teendők
+
+* Function call (tool usage) támogatás beépítése a Prompt Lab pipeline-ba:
+  * Bundle, plan, runner, validátor szinten is támogatott legyen
+  * OpenAI function calling vagy saját tool registry integráció
+  * Tool call szimuláció vagy tényleges végrehajtás
+  * Tool result visszacsatolása az LLM-nek, logolás, validáció
+* Stepwise plan és bundle szintű tool call tesztek, elvárt outputok
+* Tool call logolás, tapasztalati naplózás
+
+#### MVP cél
+
+✅ A pipeline képes tool call-t felismerni, végrehajtani/szimulálni, validálni és logolni, stepwise plan workflow-ban is.
+
+---
+
 ## 📦 Output
 
 * Működő stepwise prompt lab

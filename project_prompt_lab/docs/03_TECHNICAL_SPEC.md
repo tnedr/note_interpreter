@@ -481,3 +481,91 @@ actual_output, validation, log → result_bundle.yaml
 - Prompt evolúció: a PromptBuilder és a bundle formátum teljesen támogatja a stepwise/human-in-the-loop prompt fejlesztést.
 
 ---
+
+## 4.7 Prompt Evolution Plan (Recommended Structure)
+
+A Prompt Evolution Plan egy YAML vagy Markdown dokumentum, amely a végcélt, a stepwise workflow-t, a bemeneti/kimeneti példákat és a teszteseteket is tartalmazza. **Jelenleg a plan és a stepwise workflow teljesen human-in-the-loop (HITL) módon működik: minden lépést, döntést, validációt ember végez, de a formátum és a rendszer úgy lett kialakítva, hogy hosszabb távon AI is képes legyen automatikusan generálni, módosítani vagy végrehajtani a plan-t és a workflow-t.**
+
+**Ajánlott szerkezet:**
+
+```yaml
+agent: GroceryClarifierAgent
+meta:
+  author: human
+  created: 2025-05-30
+  status: draft
+  description: Human-driven stepwise plan for clarification of grocery notes
+
+final_goal:
+  description: >
+    A cél, hogy a felhasználó által írt, szabad szöveges bevásárló jegyzetekből automatikusan, strukturált, egyértelmű, LLM-barát outputot generáljunk.
+  input_examples:
+    - tej
+    - "I have to buy 200g 82% fat content butter"
+    - asdfasfdf
+  expected_final_output:
+    - item: tej
+      clarity_score: 80
+      clarification: null
+    - item: I have to buy 200g 82% fat content butter
+      clarity_score: 95
+      clarification: null
+    - item: asdfasfdf
+      clarity_score: 10
+      clarification: "Mit jelent az 'asdfasfdf'?"
+
+steps:
+  - step_name: scoring
+    goal: Minden elemhez clarity score-t rendelni.
+    prompt: scoring_prompt.yaml
+    input: raw_notes
+    expected_output: clarity_scores
+    human_review: true
+    notes: Az ember eldönti, hogy a score-ok megfelelők-e.
+    test:
+      input: ["tej", "I have to buy 200g 82% fat content butter", "asdfasfdf"]
+      expected_output: [80, 95, 10]
+  - step_name: clarification
+    goal: Homályos jegyzetekhez visszakérdezni, pontosítani.
+    prompt: clarification_prompt.yaml
+    input: raw_notes, clarity_scores
+    expected_output: clarified_notes
+    human_review: true
+    notes: Az ember jóváhagyja vagy szerkeszti a visszakérdezéseket, illetve a válaszokat.
+    test:
+      input:
+        - item: tej
+          clarity_score: 80
+        - item: asdfasfdf
+          clarity_score: 10
+      expected_output:
+        - item: tej
+          clarification: null
+        - item: asdfasfdf
+          clarification: "Mit jelent az 'asdfasfdf'?"
+  - step_name: final_output
+    goal: Strukturált, egyértelmű output generálása (pl. JSON lista minden tételről).
+    prompt: final_output_prompt.yaml
+    input: clarified_notes
+    expected_output: structured_shopping_list
+    human_review: true
+    notes: Az ember validálja a végső outputot, és visszajelzést ad a teljes folyamatról.
+    test:
+      input:
+        - item: tej
+          clarification: null
+        - item: asdfasfdf
+          clarification: "Mit jelent az 'asdfasfdf'?"
+      expected_output:
+        - item: tej
+          ready: true
+        - item: asdfasfdf
+          ready: false
+```
+
+**Ajánlott mezők:**
+- agent, meta, final_goal (input_examples, expected_final_output), steps (step_name, goal, prompt, input, expected_output, human_review, notes, test)
+
+Ez a szerkezet támogatja a prompt evolúció, a stepwise workflow, a human-in-the-loop validáció és az AI-driven fejlesztés minden aspektusát. **A jelenlegi workflow teljesen HITL, de a rendszer készen áll arra, hogy a jövőben AI is átvegye a plan generálását, módosítását vagy akár a stepwise workflow végrehajtását.**
+
+---
