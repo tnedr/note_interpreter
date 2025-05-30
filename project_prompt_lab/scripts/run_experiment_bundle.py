@@ -15,11 +15,12 @@ class DummyLLM:
     """
     Egyszerű determinisztikus LLM, amely az input alapján visszaad egy fix vagy sablonos választ.
     """
-    def __init__(self):
-        pass
+    def __init__(self, output=None):
+        self.output = output
 
     def run(self, prompt: str, input_data: Dict[str, Any]) -> Dict[str, Any]:
-        # Példaként: visszaadja az input note-ot, clarity_score=50
+        if self.output is not None:
+            return self.output
         note = input_data.get("note", "")
         return {
             "clarity_score": 50,
@@ -72,8 +73,30 @@ def main(bundle_path: str):
     # 2. Input betöltése
     input_data = load_input(bundle['input'], base_dir)
 
-    # 3. Dummy LLM inicializálása
-    llm = DummyLLM()
+    # 3. LLM inicializálása (dummy: explicit output kötelező)
+    llm_type = bundle.get('llm_type', 'dummy')
+    dummy_output = None
+    if llm_type == 'dummy':
+        if 'dummy_output' in bundle:
+            dummy_output = bundle['dummy_output']
+        elif 'dummy_output_file' in bundle:
+            dummy_output_path = base_dir / bundle['dummy_output_file']
+            if dummy_output_path.suffix.lower() == '.yaml' or dummy_output_path.suffix.lower() == '.yml':
+                with open(dummy_output_path, 'r', encoding='utf-8') as f:
+                    dummy_output = yaml.safe_load(f)
+            elif dummy_output_path.suffix.lower() == '.csv':
+                import csv
+                with open(dummy_output_path, 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    dummy_output = next(reader)
+            else:
+                raise ValueError(f"Unsupported dummy_output_file format: {dummy_output_path.suffix}")
+        else:
+            raise ValueError("Dummy LLM-hez explicit dummy_output vagy dummy_output_file szükséges a bundle-ban!")
+        llm = DummyLLM(output=dummy_output)
+    else:
+        # Itt később lehet igazi LLM inicializáció
+        llm = DummyLLM()  # ideiglenesen
 
     # 4. Lefuttatás
     actual_output = llm.run(prompt, input_data)
@@ -84,7 +107,7 @@ def main(bundle_path: str):
 
     # 6. Log generálása (mindig az agent saját 05_logs mappájába)
     # Feltételezzük, hogy a bundle_path szerkezete: .../agents/<agent>/03_experiment_bundles/<bundle>.yaml
-    agent_dir = base_dir.parent.parent  # .../agents/<agent>
+    agent_dir = base_dir.parent  # .../agents/<agent>
     logs_dir = agent_dir / "05_logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
     log_path = logs_dir / f"{Path(bundle_path).stem}__log.md"

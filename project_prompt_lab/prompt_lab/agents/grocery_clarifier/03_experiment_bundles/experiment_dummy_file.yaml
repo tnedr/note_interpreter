@@ -1,0 +1,18 @@
+id: experiment__dummy_file
+step: step_dummy_file
+llm_type: dummy
+prompt:
+  purpose: Dummy file output test
+  source: ../../01_prompts/s1_v1.yaml
+  text: |
+    You are a shopping assistant.
+    Evaluate this input and return a clarity score (0–100).
+    Input: {note}
+input:
+  format: yaml
+  content:
+    note: "teszt file"
+expected_output:
+  clarity_score: 77
+  interpreted_text: "FILE_DUMMY"
+dummy_output_file: ../../dummy_outputs/dummy_file_output.yaml 
