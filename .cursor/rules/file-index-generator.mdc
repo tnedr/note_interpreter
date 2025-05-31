@@ -1,0 +1,16 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+id: pfi
+title: 'File Index Generator'
+description: 'Listázza a projekt fájljait MCP-vel'
+server: file-indexer
+call:
+  method: tools/call
+  params:
+    name: agent_tool
+    arguments:
+      directory: '.'
+
