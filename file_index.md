@@ -1,0 +1,179 @@
+# Project File Index (Raw)
+
+01_meta/
+  mcp_own_installation.md
+  file_index_augmented copy.md
+  file_index_augmented.md
+  thoughtlines.md
+  important.md
+  customGPTs/
+  02_scripts/
+  sessions/
+  01_aihuman_guidelines/
+  91_templates/
+  03_cursor_agent_instructions/
+  11_cursor_agent_results/
+ai_human_collab/
+  project_stepwise_cursor_agent/
+  journal.md
+  discussion.md
+  ai_observations.md
+  README.md
+aihuman_journal/
+  journal.md
+demo/
+  run_clarify_and_score_demo.py
+  run_llm_agent_demo.py
+  log_color_demo.py
+docs/
+  prompt_builder_usage.md
+  prompt_design_guidelines.md
+  regression_harness.md
+  master_plan_implementation_steps.md
+  multi_agent_system_master_plan.md
+  examples/
+  index.md
+  agent_test_plan_template.md
+  ai_human_rules.md
+  04_implementation_plan.md
+  agent_building_guidelines.md
+  02_functional_specification.md
+  03_technical_specification.md
+  00_AI_project_overview.md
+  01_system_overview.md
+logs/
+  clarify_and_score_demo_2025-05-22_22-48-18.log
+  clarify_and_score_demo.log
+  llm_agent_debug_2025-05-22_22-17-41.log
+  llm_agent_debug_2025-05-22_20-59-23.log
+  llm_agent_debug.log
+note_interpreter/
+  __pycache__/
+  llm_agent.py
+  clarify_and_score_agent.py
+  prompt_builder.py
+  agent_core.py
+  models.py
+  log.py
+  colors.py
+  user_output.py
+  io.py
+  __init__.py
+note_interpreter.egg-info/
+  SOURCES.txt
+  requires.txt
+  top_level.txt
+  dependency_links.txt
+  PKG-INFO
+project_prompt_lab/
+  TODO.md
+  docs/
+  run_tests_safe.py
+  prompt_lab/
+    agents/
+      grocery_clarifier/
+        _improve.md
+        prompt_evolution_plan.yaml
+        03_experiment_bundles/
+          experiment_real_llm_csv__result.yaml
+          experiment_real_llm_csv.yaml
+          experiment_real_llm_csv_input.csv
+          experiment_real_llm__result.yaml
+          experiment_real_llm.yaml
+          experiment_dummy_explicit__result.yaml
+          experiment_dummy_file__result.yaml
+          experiment_dummy_file.yaml
+          experiment_dummy_explicit.yaml
+        05_logs/
+          experiment_real_llm_csv__log.md
+          experiment_real_llm__log.md
+          experiment_dummy_explicit__log.md
+          experiment_s1_01__log.md
+          experiment_dummy_file__log.md
+        04_actual_outputs/
+        dummy_outputs/
+          dummy_file_output.yaml
+        __pycache__/
+        01_prompts/
+          s2_v1.yaml
+          s1_v1.yaml
+        02_inputs/
+        deprecated/
+          experiments/
+            experiment_s2_01.yaml
+            experiment_s1_01.yaml
+            test_s3_01.yaml
+          outputs/
+            s3_v2.1__output_01.json
+          s2_v1.yaml
+          s1_v1.yaml
+          s3_v2.1__log.txt
+          s3_v2.1.yaml
+          s3_v1.yaml
+      05_logs/
+        experiment_s1_01__log.md
+      _overview.md
+      README.md
+    examples/
+      experiment_bundles/
+        experiment_bundle_template.yaml
+        test_bundle.yaml
+        experiment_bundle.md
+    libs/
+      output_validator.py
+      user_output.py
+      agent_core_v2.py
+      config_utils.py
+      __pycache__/
+      _overview.md
+      __init__.py
+      stepwise_manager.py
+      README.md
+      prompt_builder.py
+      log.py
+      colors.py
+    scripts/
+      run_tests.py
+      run_stepwise.py
+      __pycache__/
+      run_experiments.py
+      _overview.md
+      langsmith_test.py
+      README.md
+    _overview.md
+  __init__.py
+  scripts/
+  archived_stepwise_plans/
+    other/
+      prompts/
+    resources/
+      clarify_and_score_agent/
+      single_agent/
+  tests/
+tests/
+  __pycache__/
+  test_run_experiment_bundle.py
+  test_llm_agent_real.py
+  test_run_stepwise.py
+  test_stepwise_manager.py
+  test_prompt_builder.py
+  test_log.py
+  test_io.py
+  test_models.py
+  __init__.py
+.git/
+.cursor/
+.venv/
+__pycache__/
+.idea/
+.pytest_cache/
+file_index.md
+Pipfile
+pytest.ini
+Pipfile.lock
+test_llm_agent.py
+.gitignore
+setup.py
+run_mvp1_pipeline.py
+README.md
+main.py 

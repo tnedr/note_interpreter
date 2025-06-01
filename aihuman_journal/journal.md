@@ -1,5 +1,6 @@
 # AI-Human Project Journal
 
+- Generated a raw, recursively detailed file index and wrote it to file_index.md in response to /pfi --raw.
 - Eltávolítottam minden sys.path manipulációt a projektből, mostantól minden import kizárólag a helyes package-struktúrát és szerkeszthető installt használ.
 - now 2024-06-09
 
@@ -37,3 +38,5 @@
 - Minden LLM modell beállítást gpt-4.1-mini-re állítottunk át a kódban és a bundle-okban, hogy elkerüljük a drága modellek véletlen használatát.
 
 - A bundle runner mostantól PromptBuilder-rel generálja a system promptot, a bundle initial_message mezőjét küldi user üzenetként, a logolás a log.py singletonnal történik, és az input context teljesen dinamikus.
+
+- Investigated the /pfi --raw command, reviewed MCP file indexer integration, agent_tool invocation, and Cursor rule documentation for project file listing.
