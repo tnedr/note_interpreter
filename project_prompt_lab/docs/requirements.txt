@@ -1,4 +1,0 @@
-promptfoo
-langchain
-langsmith
-openai 
